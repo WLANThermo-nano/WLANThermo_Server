@@ -1,5 +1,5 @@
 <?php
- error_reporting(E_ALL);
+error_reporting(E_ALL);
 require_once("../../config.inc.php");
 SimpleLogger::info("############################################################\n");
 
@@ -144,7 +144,7 @@ function searchDevice($dbh,$serial){
 		$statement->execute();
 		$statement->setFetchMode(PDO::FETCH_ASSOC);
 		if ($statement->rowCount() > 0) {
-		  $statement->fetch();
+		  return $statement->fetch();
 		} else {
 		  return false;
 		}
