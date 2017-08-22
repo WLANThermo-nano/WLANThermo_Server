@@ -2,9 +2,16 @@
 /* @author Florian Riedl */
 error_reporting(E_ALL);
 
-// sendTelegram.php?serial=54gfdgf&token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc&chatID=399660681&ch=0&msg=up&lang=de
-if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['token']) AND !empty($_GET['token']) AND isset($_GET['chatID']) AND !empty($_GET['chatID']) AND isset($_GET['ch']) AND isset($_GET['msg']) AND !empty($_GET['msg']) AND isset($_GET['lang']) AND !empty($_GET['lang'])){
-	sendTelegram($_GET['token'],$_GET['chatID'],getMsg($_GET['ch'],$_GET['msg'],$_GET['lang']));
+// message.php?serial=54gfdgf&token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc&chatID=399660681&ch=0&msg=up&lang=de&service=pushover
+if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['token']) AND !empty($_GET['token']) AND isset($_GET['chatID']) AND !empty($_GET['chatID']) AND isset($_GET['ch']) AND isset($_GET['msg']) AND !empty($_GET['msg']) AND isset($_GET['lang']) AND !empty($_GET['lang']) AND isset($_GET['service']) AND !empty($_GET['service'])){
+	switch ($_GET['service']) {
+    case telegram:
+		sendTelegram($_GET['token'],$_GET['chatID'],getMsg($_GET['ch'],$_GET['msg'],$_GET['lang']));
+        break;
+    case pushover:
+		sendPushover($_GET['token'],$_GET['chatID'],getMsg($_GET['ch'],$_GET['msg'],$_GET['lang']));
+        break;
+	}
 }else{
 	die('false');
 }
@@ -44,7 +51,30 @@ function sendTelegram($token,$chatID,$msg){
 	}
 }
 
+function sendPushover($token,$chatID,$msg){
+	curl_setopt_array($ch = curl_init(), array(
+	  CURLOPT_URL => "https://api.pushover.net/1/messages.json",
+	  CURLOPT_POSTFIELDS => array(
+		"token" => $token,
+		"user" => $chatID,
+		"message" => $msg,
+	  ),
+	  CURLOPT_SAFE_UPLOAD => true,
+	  CURLOPT_RETURNTRANSFER => true,
+	));
+	curl_exec($ch);
+	curl_close($ch);
 
+
+	// $url = 'https://api.pushover.net/1/messages.json';
+	// $ch = curl_init($url); // cURL ínitialisieren
+	// curl_setopt($ch, CURLOPT_HEADER, 0); // Header soll nicht in Ausgabe enthalten sein
+	// curl_setopt($ch, CURLOPT_POST, 1); // POST-Request wird abgesetzt
+	// curl_setopt($ch, CURLOPT_POSTFIELDS, 'token=' . $token . '&user= '.$chatID.' &message="'.$msg.'"'); // POST-Felder festlegen, die gesendet werden sollen
+	// curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	// curl_exec($ch); // Ausführen
+	// curl_close($ch); // Objekt schließen und Ressourcen freigeben
+}
 
 // Needed by strftime() => error message otherwise
 date_default_timezone_set ( 'Europe/Berlin' );

@@ -15,7 +15,7 @@
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
     <title>WLANThermo - Nano</title>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
 	<style>
 @font-face {
   font-family: 'nano';
@@ -3209,7 +3209,7 @@
 					}
 				}
 				if(chart_ts != jr.system.time && pit_act === true){
-					addData(timeConverterChart(jr.system.time),jr,true);
+					addData(timeConverter(jr.system.time),jr,true);
 					chart_ts = jr.system.time;
 				}
 				
@@ -3333,23 +3333,6 @@
 	  //alert(unix + ' ' + UNIX_timestamp);
 	  return time;
 	}
-	function timeConverterChart(UNIX_timestamp){
-	  var a = new Date(UNIX_timestamp * 1000);
-	  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-	  var year = a.getFullYear();
-	  var month = months[a.getMonth()];
-	  var date = a.getDate();
-	  var hour = a.getHours();
-	  hour = ("0" + hour).slice(-2);
-	  var min = a.getMinutes();
-	  min = ("0" + min).slice(-2);
-	  var sec = a.getSeconds();
-	  sec = ("0" + sec).slice(-2);
-	  var time = hour + ':' + min + ':' + sec ;
-	  //var unix = Math.round(+new Date()/1000);
-	  //alert(unix + ' ' + UNIX_timestamp);
-	  return time;
-	}
 Chart.defaults.global.animationSteps = 50;
 Chart.defaults.global.tooltipYPadding = 16;
 Chart.defaults.global.tooltipCornerRadius = 0;
@@ -3430,7 +3413,8 @@ Chart.defaults.global.scaleFontSize = 16;
 			   yAxisID: "B", 
 			   radius: 0,
 			   lineTension: 0,
-			   borderColor: 'black',
+			   borderColor: 'rgba(0, 0, 0, 0.2)',
+			   borderWidth: 1,
 			   data: []
            }
         ]
@@ -3438,6 +3422,20 @@ Chart.defaults.global.scaleFontSize = 16;
 	  options:{
 		scales:{
 			xAxes:[{
+			type: 'time',
+				time: {
+				  displayFormats: {
+					'millisecond': 'k:mm:ss',
+					'second': 'k:mm:ss',
+					'minute': 'k:mm:ss',
+					'hour': 'k:mm:ss',
+					'day': 'k:mm:ss',
+					'week': 'k:mm:ss',
+					'month': 'k:mm:ss',
+					'quarter': 'k:mm:ss',
+					'year': 'k:mm:ss',
+				  }
+				},
 				ticks:{
 					autoSkip: true,
 					maxTicksLimit: 10
@@ -3491,7 +3489,7 @@ function loadChartData(){
 		for (var i = 0; i < response.length -1; i++) {			
 			jr = JSON.parse(response[i]);
 			if(chart_ts != jr.system.time){
-				addData(timeConverterChart(jr.system.time),jr,false);
+				addData(timeConverter(jr.system.time),jr,false);
 				chart_ts = jr.system.time;
 			}	
 		}
@@ -3528,6 +3526,8 @@ function addData(timestamp,jr,update){
 	}
 
 }
+
+
 readTemp();	
 loadChartData();	
 </script>

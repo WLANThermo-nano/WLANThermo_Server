@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 require_once("../../config.inc.php");
 /* @author Florian Riedl
  */	
-SimpleLogger::info("############################################################\n");
+//SimpleLogger::info("############################################################\n");
 $json = file_get_contents('php://input');
 
 if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['api_token']) AND !empty($_GET['api_token'])){

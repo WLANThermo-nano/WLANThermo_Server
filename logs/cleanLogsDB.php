@@ -19,16 +19,16 @@ try {
 	SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 	die('false');
 }
-cleanCloud($dbh);
+cleanLogs($dbh);
 $dbh = null; //Datenbankverbindung schließen
 	
 // ############################################################################################
 // Functions ----------------------------------------------------------------------------------
 // ############################################################################################
 
-function cleanCloud($dbh){
+function cleanLogs($dbh){
 	try {
-		$sql = "DELETE FROM `cloud` WHERE TIMESTAMP(DATE_SUB(NOW(), INTERVAL 48 hour)) > `time`";
+		$sql = "DELETE FROM `logs` WHERE TIMESTAMP(DATE_SUB(NOW(), INTERVAL 48 hour)) > `time`";
 		$statement = $dbh->prepare($sql);
 		$inserted = $statement->execute();
 		//echo $statement->rowCount(); 
