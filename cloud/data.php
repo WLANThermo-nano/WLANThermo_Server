@@ -4,7 +4,7 @@ require_once("../../config.inc.php");
 /* @author Florian Riedl
  */	
 
-SimpleLogger::info("############################################################\n");
+//SimpleLogger::info("############################################################\n");
 ob_start('ob_gzhandler');
 
 if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
@@ -19,14 +19,22 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 		die('false');
 	}
 	if(isset($_GET['chartHistory'])){
-		$result = getHistory($dbh,$_GET['api_token']); // Look for Device into Database		
+		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
+			$result = "callback(" . getHistory($dbh,$_GET['api_token']) . ");";	// Look for Device into Database	
+		}else{
+			$result = getHistory($dbh,$_GET['api_token']); // Look for Device into Database	
+		}
 		if($result === false){
 			die('false');
 		}else{
 			echo $result;
-		}		
+		}	
 	}else{
-		$result = getData($dbh,$_GET['api_token']); // Look for Device into Database		
+		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
+			$result = "callback(" . getData($dbh,$_GET['api_token']) . ");";
+		}else{
+			$result = getData($dbh,$_GET['api_token']); // Look for Device into Database				
+		}
 		if($result === false){
 			die('false');
 		}else{
@@ -35,7 +43,6 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	}
 	$dbh = null; //Datenbankverbindung schließen
 
-	
 }else{
 	die('false');
 }
