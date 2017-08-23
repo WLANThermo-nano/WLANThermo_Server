@@ -20,7 +20,7 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	}
 	if(isset($_GET['chartHistory'])){
 		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
-			$result = "callback(" . getHistory($dbh,$_GET['api_token']) . ");";	// Look for Device into Database	
+			$result = "callback('" . getHistory($dbh,$_GET['api_token']) . "');";	// Look for Device into Database	
 		}else{
 			$result = getHistory($dbh,$_GET['api_token']); // Look for Device into Database	
 		}
