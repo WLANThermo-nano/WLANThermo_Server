@@ -20,7 +20,7 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	}
 	if(isset($_GET['chartHistory'])){
 		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
-			$result = "callback('" . getHistory($dbh,$_GET['api_token']) . "');";	// Look for Device into Database	
+			$result = "".$_GET['callback']."('" . getHistory($dbh,$_GET['api_token']) . "');";	// Look for Device into Database	
 		}else{
 			$result = getHistory($dbh,$_GET['api_token']); // Look for Device into Database	
 		}
@@ -31,14 +31,23 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 		}	
 	}else{
 		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
-			$result = "callback(" . getData($dbh,$_GET['api_token']) . ");";
+			$result = "".$_GET['callback']."(" . getData($dbh,$_GET['api_token']) . ");";
 		}else{
 			$result = getData($dbh,$_GET['api_token']); // Look for Device into Database				
 		}
 		if($result === false){
-			die('false');
+			if (isset($_GET['callback']) AND !empty($_GET['callback'])){
+				die("".$_GET['callback']."(false);");
+			}else{
+				die('false');
+			}
+			
 		}else{
-			echo $result;
+			if (isset($_GET['callback']) AND !empty($_GET['callback'])){
+				echo "".$_GET['callback']."(" . $result . ");";
+			}else{
+				echo $result;
+			}
 		}
 	}
 	$dbh = null; //Datenbankverbindung schließen
