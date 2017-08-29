@@ -80,7 +80,7 @@ function getData($dbh,$api_token){
 }	
 function getHistory($dbh,$api_token){
 	try {
-		$sql = "SELECT chart FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 hour)) order by `time` asc";
+		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL 24 hour)) order by `time` asc";
 		$statement = $dbh->prepare($sql);
 		$statement->bindValue(':api_token', $api_token);
 		$statement->execute();
@@ -88,12 +88,23 @@ function getHistory($dbh,$api_token){
 		if ($statement->rowCount() > 0) {
 		    $data = '';
 			foreach($statement as $daten) {
-				$data .= $daten['chart'];
+
+				$obj = json_decode( $daten['data'], true );
+				$arr = array(); 
+				$arr['system']['time'] = $obj['system']['time'];
+				foreach ( $obj['channel'] as $key => $value )
+				{
+					$arr['channel'][$key]['temp'] = $value['temp'];
+				}
+				$arr['pitmaster']['value'] = $obj['pitmaster']['value'];
+				$arr['pitmaster']['set'] = $obj['pitmaster']['set'];
+				$arr['pitmaster']['typ'] = $obj['pitmaster']['typ'];
+				$history = json_encode($arr);
+
+				$data .= $history;
 				$data .= ';';
-				//echo $daten['id'];
 			}
 			return substr($data, 0, -1);
-		  //return($statement->fetch()['data']);
 		} else {
 		  return false;
 		}

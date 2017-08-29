@@ -9,19 +9,7 @@ $json = file_get_contents('php://input');
 if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	if(!empty($json)){
 		$dbh = connectDatabase($db_server,$db_name,$db_user,$db_pass);
-		
-		$obj = json_decode( $json, true );
-		$arr = array(); 
-		$arr['system']['time'] = $obj['system']['time'];
-		foreach ( $obj['channel'] as $key => $value )
-		{
-			$arr['channel'][$key]['temp'] = $value['temp'];
-		}
-		$arr['pitmaster']['value'] = $obj['pitmaster']['value'];
-		$arr['pitmaster']['set'] = $obj['pitmaster']['set'];
-		$arr['pitmaster']['typ'] = $obj['pitmaster']['typ'];
-		$chart = json_encode($arr);
-		insertCloud($dbh,$_GET['serial'],$_GET['api_token'],$json,$chart);
+		insertCloud($dbh,$_GET['serial'],$_GET['api_token'],$json);
 	}else{
 		SimpleLogger:_error("Serial ot API_Token not set\n");
 		die('false');
@@ -47,14 +35,13 @@ function closeDatabase(){
 	$dbh = null;
 }
 
-function insertCloud($dbh,$serial,$api_token,$data,$chart){
+function insertCloud($dbh,$serial,$api_token,$data){
 	try {
-		$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`, `chart`) VALUES (:serial, :api_token, :data, :chart)";
+		$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`) VALUES (:serial, :api_token, :data)";
 		$statement = $dbh->prepare($sql);
 		$statement->bindValue(':serial', $serial);
 		$statement->bindValue(':api_token', $api_token);
 		$statement->bindValue(':data', $data);
-		$statement->bindValue(':chart', $chart);
 		$inserted = $statement->execute();
 		if($inserted){
 			return true;
