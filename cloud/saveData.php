@@ -1,6 +1,7 @@
 <?php
 error_reporting(E_ALL);
 require_once("../../config.inc.php");
+
 /* @author Florian Riedl
  */	
 //SimpleLogger::info("############################################################\n");
@@ -9,6 +10,12 @@ $json = file_get_contents('php://input');
 if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	if(!empty($json)){
 		$dbh = connectDatabase($db_server,$db_name,$db_user,$db_pass);
+		$arr = array();
+		$arr = json_decode( $json, true );
+		if($arr['system']['time'] <= '1483228800'){
+			$arr['system']['time'] = time();
+		}
+		$json = json_encode($arr);	
 		insertCloud($dbh,$_GET['serial'],$_GET['api_token'],$json);
 	}else{
 		SimpleLogger:_error("Serial ot API_Token not set\n");
