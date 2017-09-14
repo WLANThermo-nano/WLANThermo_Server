@@ -1747,7 +1747,7 @@
 		</a>
 		<div id="thermoname">N.C.</div>
 		<div class="battery" onclick="setshowBatteryWlanIcon();">N.C.</div>
-		<div title="" class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
+		<div class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
 		<div class="notification" style="display:none" onclick="update();"><span class="icon-notification"> </span></div>
 	</div>
 	<div class="clear"></div>
@@ -2081,14 +2081,12 @@
     }
 	
 	var showBatteryWlanIcon = true;
-	
 	function setshowBatteryWlanIcon(){
 		showBatteryWlanIcon = false;
 		readTemp();
 		setTimeout(function(){
 			showBatteryWlanIcon = true;
         }, 10000);
-		//setTimeout(showBatteryWlanIcon = false, 3000)
 	}
 	
 	function getBatteryIcon(percent,charge){
@@ -2227,10 +2225,9 @@
 	  var sec = a.getSeconds();
 	  sec = ("0" + sec).slice(-2);
 	  var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-	  //var unix = Math.round(+new Date()/1000);
-	  //alert(unix + ' ' + UNIX_timestamp);
 	  return time;
 	}
+	
 	Chart.defaults.global.animationSteps = 50;
 	Chart.defaults.global.tooltipYPadding = 16;
 	Chart.defaults.global.tooltipCornerRadius = 0;
@@ -2375,59 +2372,57 @@
         }
 	  }
 	};
-  var nanoChart = new Chart(myContext, myChartConfig);   
-
-function loadChartData(){
-	loadJSON(api_data_test, '', '10000', function (response_1) {
-		if (response_1 == 'false'){
-			alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
-			window.location = "http://www.wlanthermo.de/";
-		}
-		var response = response_1.split(";");
-		for (var i = 0; i < response.length -1; i++) {			
-			jr = JSON.parse(response[i]);
-			if(chart_ts != jr.system.time){
-				addData(timeConverter(jr.system.time),jr,false);
-				chart_ts = jr.system.time;
-			}	
-		}
-		pit_act = true;
-		readTemp();		
-	})
-}  
+	
+	var nanoChart = new Chart(myContext, myChartConfig);   
+	function loadChartData(){
+		loadJSON(api_data_test, '', '10000', function (response_1) {
+			if (response_1 == 'false'){
+				alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
+				window.location = "http://www.wlanthermo.de/";
+			}
+			var response = response_1.split(";");
+			for (var i = 0; i < response.length -1; i++) {			
+				jr = JSON.parse(response[i]);
+				if(chart_ts != jr.system.time){
+					addData(timeConverter(jr.system.time),jr,false);
+					chart_ts = jr.system.time;
+				}	
+			}
+			pit_act = true;
+			readTemp();		
+		})
+	}  
   
-function addData(timestamp,jr,update){
-	nanoChart.data.labels.push(timestamp);
-	var i;
-	for (i = 0; i < jr.channel.length; i++) {
-		nanoChart.data.datasets[i].borderColor = jr.channel[i].color;
-		nanoChart.data.datasets[i].backgroundColor = jr.channel[i].color;
-		nanoChart.data.datasets[i].fill = false;
-		if (jr.channel[i].temp == '999'){
-		//nanoChart.data.datasets[i].showLine = false;
-			nanoChart.data.datasets[i].data.push(null);
+	function addData(timestamp,jr,update){
+		nanoChart.data.labels.push(timestamp);
+		var i;
+		for (i = 0; i < jr.channel.length; i++) {
+			nanoChart.data.datasets[i].borderColor = jr.channel[i].color;
+			nanoChart.data.datasets[i].backgroundColor = jr.channel[i].color;
+			nanoChart.data.datasets[i].fill = false;
+			if (jr.channel[i].temp == '999'){
+			//nanoChart.data.datasets[i].showLine = false;
+				nanoChart.data.datasets[i].data.push(null);
+			}else{
+				//nanoChart.data.datasets[i].showLine = true;
+				nanoChart.data.datasets[i].data.push(jr.channel[i].temp.toFixed(1) );
+			}
+		}
+		nanoChart.data.datasets[8].fill = false;
+		if(jr.pitmaster.typ == 'off'){
+			nanoChart.data.datasets[8].data.push(null);
+			nanoChart.data.datasets[9].data.push(null);	
 		}else{
-			//nanoChart.data.datasets[i].showLine = true;
-			nanoChart.data.datasets[i].data.push(jr.channel[i].temp.toFixed(1) );
+			nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
+			nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
+		}
+		if(update === true){
+			nanoChart.update();	
 		}
 	}
-	nanoChart.data.datasets[8].fill = false;
-    if(jr.pitmaster.typ == 'off'){
-		nanoChart.data.datasets[8].data.push(null);
-		nanoChart.data.datasets[9].data.push(null);	
-	}else{
-		nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
-		nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
-	}
-	if(update === true){
-		nanoChart.update();	
-	}
 
-}
-
-
-readTemp();	
-loadChartData();	
+	readTemp();	
+	loadChartData();	
 </script>
 
 </body>
