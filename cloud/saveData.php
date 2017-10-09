@@ -18,7 +18,7 @@ if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['api_toke
 		$json = json_encode($arr);	
 		insertCloud($dbh,$_GET['serial'],$_GET['api_token'],$json);
 	}else{
-		SimpleLogger:_error("Serial ot API_Token not set\n");
+		SimpleLogger::error("Serial ot API_Token not set\n");
 		die('false');
 	}//Connecting to database
 }else{
