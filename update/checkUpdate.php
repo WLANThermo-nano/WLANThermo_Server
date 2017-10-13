@@ -36,12 +36,12 @@ if (isset($_GET['device']) AND !empty($_GET['device']) AND isset($_GET['serial']
 	
 	if($result !== false){
 		SimpleLogger::info("Device '".$_GET['device']."/".$_GET['serial']."' found in database\n");
-		if($result[device] == strval($_GET['device']) AND $result[software_version] == strval($_GET['sw_version']) AND $result[hardware_version] == $_GET['hw_version']){
+		if($result[device] == strval($_GET['device']) AND $result['software_version'] == strval($_GET['sw_version']) AND $result['hardware_version'] == $_GET['hw_version']){
 			SimpleLogger::info("Device '".$_GET['device']."/".$_GET['serial']."' in database is up to date\n");
 		}else{
 			SimpleLogger::info("Device '".$_GET['device']."/".$_GET['serial']."' in database is unequal\n");
-			SimpleLogger::debug("Device:".$_GET['device']."/".$result[device]." Serial:".$_GET['serial']."/".$result[serial]." Hardware Version:".$_GET['hw_version']."/".$result[hardware_version]." Software Version:".$_GET['sw_version']."/".$result[software_version]."\n");
-			$result = updateDevice($dbh,strval($_GET['device']),strval($_GET['serial']),$result[name],strval($_GET['hw_version']),strval($_GET['sw_version']));
+			SimpleLogger::debug("Device:".$_GET['device']."/".$result['device']." Serial:".$_GET['serial']."/".$result['serial']." Hardware Version:".$_GET['hw_version']."/".$result['hardware_version']." Software Version:".$_GET['sw_version']."/".$result['software_version']."\n");
+			$result = updateDevice($dbh,strval($_GET['device']),strval($_GET['serial']),$result['name'],strval($_GET['hw_version']),strval($_GET['sw_version']));
 			if($result !== false){
 				SimpleLogger::info("Device '".$_GET['device']."/".$_GET['serial']."' in database has been updated\n");
 			}else{
