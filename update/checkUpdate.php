@@ -36,7 +36,7 @@ if (isset($_GET['device']) AND !empty($_GET['device']) AND isset($_GET['serial']
 	
 	if($result !== false){
 		SimpleLogger::info("Device '".$_GET['device']."/".$_GET['serial']."' found in database\n");
-		if($result[device] == strval($_GET['device']) AND $result['software_version'] == strval($_GET['sw_version']) AND $result['hardware_version'] == $_GET['hw_version']){
+		if($result['device'] == strval($_GET['device']) AND $result['software_version'] == strval($_GET['sw_version']) AND $result['hardware_version'] == $_GET['hw_version']){
 			SimpleLogger::info("Device '".$_GET['device']."/".$_GET['serial']."' in database is up to date\n");
 		}else{
 			SimpleLogger::info("Device '".$_GET['device']."/".$_GET['serial']."' in database is unequal\n");
