@@ -15,7 +15,7 @@
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
     <title>WLANThermo - Nano</title>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.min.js"></script>
 	<style>
 @font-face {
   font-family: 'nano';
@@ -1983,6 +1983,9 @@
 	}
 	var api_data = 'data.php?api_token=' + GET('api_token');
 	var api_data_test = api_data + '&chartHistory=true';
+	if(GET('time') != 'undefined'){
+		api_data_test = api_data_test + '&time=' + GET('time');
+	}
 	var byId = function( id ) { return document.getElementById( id ); };
 	var byClass = function( id ) { return document.getElementsByClassName( id ); };
 	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
@@ -2386,7 +2389,7 @@ function loadChartData(){
 		var response = response_1.split(";");
 		for (var i = 0; i < response.length -1; i++) {			
 			jr = JSON.parse(response[i]);
-			if(chart_ts != jr.system.time && jr.length < 1){
+			if(chart_ts != jr.system.time){
 				addData(timeConverter(jr.system.time),jr,false);
 				chart_ts = jr.system.time;
 			}	
