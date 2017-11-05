@@ -6,28 +6,44 @@ require_once("../../config.inc.php");
  */	
 //SimpleLogger::info("############################################################\n");
 $json = file_get_contents('php://input');
-
-if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['api_token']) AND !empty($_GET['api_token'])){
-	if(!empty($json)){
+$arr = array();
+$arr = json_decode( $json, true );
+//SimpleLogger::info("".$_GET['serial']."\n");
+if ($arr === null
+    && json_last_error() !== JSON_ERROR_NONE) {
+    SimpleLogger::error("JSON invalide ".$json."\n");
+}else{
+	if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 		$dbh = connectDatabase($db_server,$db_name,$db_user,$db_pass);
-		$arr = array();
-		$arr = json_decode( $json, true );
 		if($arr['system']['time'] <= '1483228800'){
 			$arr['system']['time'] = time();
 		}
 		$json = json_encode($arr);	
 		insertCloud($dbh,$_GET['serial'],$_GET['api_token'],$json);
+	}else if (isset($arr['system']['serial']) AND isset($arr['system']['api_token'])){
+		$dbh = connectDatabase($db_server,$db_name,$db_user,$db_pass);
+		if($arr['system']['time'] <= '1483228800'){
+			$arr['system']['time'] = time();
+		}
+		$serial = $arr['system']['serial'];
+		$api_token = $arr['system']['api_token'];
+		unset($arr['system']['serial']);
+		unset($arr['system']['api_token']);
+		$json = json_encode($arr);	
+		insertCloud($dbh,$serial,$api_token,$json);	
 	}else{
-		SimpleLogger::error("Serial ot API_Token not set\n");
+		SimpleLogger::error("Serial or API_Token not set\n");
+		SimpleLogger::error("".$json."\n");
 		die('false');
-	}//Connecting to database
-}else{
-	die('false');
+	}
 }
+
+
+
 
 function connectDatabase($db_server,$db_name,$db_user,$db_pass){
 		try {
-			SimpleLogger::info("Connecting to the database...\n");
+			//SimpleLogger::info("Connecting to the database...\n");
 			$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
 			$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
 			$dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING );

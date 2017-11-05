@@ -15,7 +15,7 @@
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
     <title>WLANThermo - Nano</title>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.min.js"></script>
 	<style>
 @font-face {
   font-family: 'nano';
@@ -1238,7 +1238,7 @@
 			}
 		}
 
-		.notification:hover, .wifi:hover, .battery:hover{
+		.channel:hover, .notification:hover, .wifi:hover, .battery:hover{
 			cursor: pointer;
 		}
 
@@ -1747,7 +1747,7 @@
 		</a>
 		<div id="thermoname">N.C.</div>
 		<div class="battery" onclick="setshowBatteryWlanIcon();">N.C.</div>
-		<div title="" class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
+		<div title="This is my tooltip" class="wifi" onclick="setshowBatteryWlanIcon();">N.C.</div>
 		<div class="notification" style="display:none" onclick="update();"><span class="icon-notification"> </span></div>
 	</div>
 	<div class="clear"></div>
@@ -1815,6 +1815,11 @@
 			</a>
             <ul class="pure-menu-list">
 			    <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
+				<li id="menuWlan" class="pure-menu-item" style="display:none">><a href="javascript:showIndex()" class="pure-menu-link"><strike>WLAN</strike></a></li>
+				<li id="menuSystem" class="pure-menu-item" style="display:none">><a href="javascript:showIndex()" class="pure-menu-link"><strike>System</strike></a></li>
+				<li id="menuPitmaster" class="pure-menu-item" style="display:none">><a href="javascript:showIndex()" class="pure-menu-link"><strike>Pitmaster</strike></a></li>
+				<li id="menuThingspeak" class="pure-menu-item" style="display:none">><a href="javascript:showIndex()" class="pure-menu-link"><strike>Thingspeak</strike></a></li>
+				<li id="menuNotification" class="pure-menu-item" style="display:none"><a href="javascript:showIndex()" class="pure-menu-link"><strike>Push Notification</strike></a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>	
         </div>
@@ -1932,7 +1937,520 @@
             </div>
         </div>
 		<!-- ################################################### -->
-
+		<div id="wlan_config" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">WLAN</button>
+			</div>
+			<h3 class="headtitle">WLAN Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box wlan_conf">						
+						<table id="networkconnect" class="wlantable" width="100%">
+							<!--Netzwerkliste -->
+						</table> 
+						<hr />
+						 <table width="100%">
+							<tr>
+								<td align="left"><h3>Netzwerk wählen...</h3></td>
+								<td id="networkrefresh" align="right"></td>
+							</tr>
+						</table> 		
+						<table id="networklist" class="wlantable" width="100%">
+								<!--Netzwerkliste -->
+						</table>
+						<hr />
+						<div class="checkbox">
+						  <label>
+							<input id="wlan_active" onclick="wlan_active();" type="checkbox" checked/><i class="helper"></i>WLAN aktivieren
+						  </label>
+						</div>						
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="wlan_set" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showWLAN()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">WLAN</button>
+				<button class="pure-button" onclick="setWLAN(document.getElementsByName('ssidInput')[0].value, document.getElementsByName('ssidPasswordInput')[0].value)">Verbinden</button>
+			</div>
+			<h3 class="headtitle">Netzwerk Verbinden</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="form-group">
+							  <input name="ssidInput" type="text" onkeyup="setssidInput();"maxlength="32" required="required"/>
+							  <label class="control-label" for="input">SSID</label><i class="bar"></i>
+							</div>			
+							<div class="form-group">
+							  <input name="ssidPasswordInput" type="password" maxlength="63" required="required"/>
+							  <label class="control-label" for="input">Passwort</label><i class="bar"></i>
+							</div>	
+						</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="pitmaster_settings" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Pitmaster</button>
+				<button class="pure-button" onclick="setPitmaster();">Speichern</button>
+			</div>
+			<h3 class="headtitle">Pitmaster Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>
+							<div class="form-group">
+								<select id="pitmaster_typ" onchange="changePitmasterTyp();">
+									<option value="off">off</option>
+									<option value="auto">auto</option>
+									<option value="manual">manual</option>
+									<option value="autotune">autotune</option>
+								</select>
+								<label class="control-label" for="select">Pitmaster</label><i class="bar"></i>
+							</div>
+							<div id="pitmaster_profile_show">
+								<div class="form-group">
+									<select onchange="showPitmasterProfile(this.value);" id="pid_profile"><!-- Placeholder --></select>
+									<label class="control-label" onchange="changePitmasterView();" for="select">Profil</label></span><i class="bar"></i>
+									<span class="icon-pencil icon-form" onclick="togglePitmasterView();">
+								</div>					  
+							</div>
+							<div id="pitmaster_channel_show">
+								<div class="form-group">
+									<select id="pitmaster_channel"><!-- Placeholder --></select>
+									<label class="control-label" for="select">Kanal</label><i class="bar"></i>
+								</div>	
+							</div>
+							<div id="pitmaster_set_show">	
+								<div class="form-group">
+									<input type="text" id="pitmaster_set" maxlength="5" onkeyup="validateNumber(this,'1','1');" required="required"/>
+									<label class="control-label" for="input">Solltemperatur</label><i class="bar"></i>
+								</div>	
+							</div>
+							<div id="pitmaster_value_show">	
+								<div class="form-group">
+								  <input type="text" id="pitmaster_value" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
+								  <label class="control-label" for="input">Pitmaster-Wert (%)</label><i class="bar"></i>
+								</div>
+							</div>
+						</form>	
+					</div>
+				</div>
+			</div>
+		</div>	
+		
+		<div id="pitmaster_profile" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="backPidProfile();">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Profile</button>
+				<button class="pure-button" onclick="setPitmasterProfile();">Speichern</button>
+			</div>
+			<div id="aktorik_settings_show">
+				<h3 class="headtitle">Aktorik</h3>
+				<div class="pure-g">
+					<div class="pure-u-1-1 pure-u-lg-1-1">
+						<div class="1-box channel_conf">
+							<form>
+								<div class="form-group">
+								  <input type="text" id="pid_name" maxlength="12" required="required"/>
+								  <label class="control-label" for="input">Profil Name</label><i class="bar"></i>
+								</div>
+								<div class="form-group">
+									<select id="pitmaster_profile_aktor"></select>
+									<label class="control-label" onchange="" for="select">Aktor</label><i class="bar"></i>
+								</div>
+								<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
+									<tr>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_DCmin" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
+										  <label class="control-label" for="input">DCmin</label><i class="bar"></i>
+										  <span class="icon-play icon-input" onclick="setDC('0');"></span>
+										</div>
+									  </td>
+									  <td>	
+										<div class="form-group">
+										  <input type="text" id="pid_DCmax" maxlength="3" onkeyup="validateNumber(this,'1');" required="required"/>
+										  <label class="control-label" for="input">DCmax</label><i class="bar"></i>
+										  <span class="icon-play icon-input" onclick="setDC('1');"></span>
+										</div>							  
+									  </td>
+									</tr>
+								</table>
+							</form>	
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="pid_settings_show">
+				<h3 class="headtitle">PID</h3>
+				<div class="pure-g">
+					<div class="pure-u-1-1 pure-u-lg-1-1">
+						<div class="1-box channel_conf">
+							<form>		
+								<table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
+									<tr>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_Kp" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
+										  <label class="control-label" for="input">Kp</label><i class="bar"></i>
+										</div>								  	  
+									  </td>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_Ki" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
+										  <label class="control-label" for="input">Ki</label><i class="bar"></i>
+										</div>								    
+									  </td>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_Kd" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
+										  <label class="control-label" for="input">Kd</label><i class="bar"></i>
+										</div>								  		  
+									  </td>
+									</tr>
+								</table>
+								<table class="table33" cellpadding="0" cellspacing="0" width="100%" border="0">
+									<tr>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_Kp_a" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
+										  <label class="control-label" for="input">Kp_a</label><i class="bar"></i>
+										</div>
+									  </td>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_Ki_a" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
+										  <label class="control-label" for="input">Ki_a</label><i class="bar"></i>
+										</div>
+									  </td>
+									  <td>
+										<div class="form-group">
+										  <input type="text" id="pid_Kd_a" maxlength="10" onkeyup="validateNumber(this,'3');" required="required"/>
+										  <label class="control-label" for="input">Kd_a</label><i class="bar"></i>
+										</div>
+									  </td>
+									</tr>
+								</table>
+							</form>	
+						</div>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="channel_settings" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Kanal</button>
+				<button id="channel_settings_save" class="pure-button" onclick="">Speichern</button>
+			</div>
+			<h3 id="channel_settings_headtitle" class="headtitle">N.C.</h3>
+            <div class="pure-g">
+				<div class="pure-u-1-1 pure-u-md-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="channel_name" maxlength="10" required="required"/>
+							  <label class="control-label" for="input">Kanal Name</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input class="temp_input" id="temp_max" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
+							  <label class="control-label" for="input">Temp Max</label><i class="bar"></i>
+							</div>							
+							<div class="form-group">
+							  <input class="temp_input" id="temp_min" type="text" onkeyup="validateNumber(this,'1');" maxlength="6" required="required"/>
+							  <label class="control-label" for="input">Temp Min</label><i class="bar"></i>
+							</div>												
+							<div class="form-group">
+							  <select id="sensor">
+									<!-- Placeholder -->
+							  </select>
+							  <label class="control-label" for="select">Fühler</label><i class="bar"></i>
+							</div>	
+							<div class="form-group">
+							  <select id="color">
+								<option value="#5587A2">Niagara</option>
+								<option value="#FFAEC9">Rosa</option>
+								<option value="#0C4C88">Lapis Blue</option>
+								<option value="#EF562D">Orange</option>
+								<option value="#A349A4">Lila</option>
+								<option value="#ED1C24">Red</option>
+								<option value="#22B14C">Green</option>
+								<option value="#FFC100">Gold</option>
+								<option value="#5C7148">Kale</option>
+								<option value="#804000">Brown</option>
+							  </select>
+							  <label class="control-label" for="select">Farbe</label><i class="bar"></i>
+							</div>	
+							<div class="checkbox"><label><input id="webalarm" type="checkbox" checked="checked"/><i class="helper"></i>Temperatur Alarm</label></div>
+						</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="system_config" class="content" style="display:none">
+			<!-- html for about-Site -->
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">System</button>
+				<button class="pure-button" onclick="setSystem()">Speichern</button>
+			</div>
+			<h3 class="headtitle">System Einstellungen</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-md-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="form-group">
+							  <input type="text" id="hostname" maxlength="13" required="required"/>
+							  <label class="control-label" for="input">Hostname</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="apname" maxlength="13" required="required"/>
+							  <label class="control-label" for="input">AP-Name</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <select id="timezone">
+								<option value="-12">MEZ-12</option>
+								<option value="-11">MEZ-11</option>
+								<option value="-10">MEZ-10</option>
+								<option value="-9">MEZ-9</option>
+								<option value="-8">MEZ-8</option>
+								<option value="-7">MEZ-7</option>
+								<option value="-6">MEZ-6</option>
+								<option value="-5">MEZ-5</option>
+								<option value="-4">MEZ-4</option>
+								<option value="-3">MEZ-3</option>
+								<option value="-2">MEZ-2</option>
+								<option value="-1">MEZ-1</option>
+								<option value="0">MEZ</option>
+								<option value="1">MEZ+1</option>
+								<option value="2">MEZ+2</option>
+								<option value="3">MEZ+3</option>
+								<option value="4">MEZ+4</option>
+								<option value="5">MEZ+5</option>
+								<option value="6">MEZ+6</option>
+								<option value="7">MEZ+7</option>
+								<option value="8">MEZ+8</option>
+								<option value="9">MEZ+9</option>
+								<option value="10">MEZ+10</option>
+								<option value="11">MEZ+11</option>
+								<option value="12">MEZ+12</option>
+							  </select>
+							  <label class="control-label" for="select">Zeitzone</label><i class="bar"></i>
+							</div>											
+							<div class="form-group">
+							  <select id="language">
+								<option value="de">Deutsch</option>
+							  </select>
+							  <label class="control-label" for="select">Sprache</label><i class="bar"></i>
+							</div>							
+							<div class="form-group">
+							  <select id="unit">
+								<option value="C">Celsius</option>
+								<option value="F">Fahrenheit</option>
+							  </select>
+							  <label class="control-label" for="select">Einheit</label><i class="bar"></i>
+							</div>	
+							<div class="form-group">
+							  <select id="hwversion"></select><label class="control-label" for="select">Hardwareversion</label><i class="bar"></i>
+							</div>
+							<div class="checkbox"><label><input id="hwalarm" type="checkbox" checked="checked"/><i class="helper"></i>Hardwarealarm</label></div>
+							<div class="checkbox"><label><input id="summer" type="checkbox"/><i class="helper"></i>Sommerzeit</label></div>
+							<div class="checkbox"><label><input id="fastmode" type="checkbox"/><i class="helper"></i>Schnelllauf</label></div>
+							<div class="checkbox"><label><input id="searchUpdate" type="checkbox"/><i class="helper"></i>Nach Updates suchen</label></div>								
+						</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="thingspeak" class="content" style="display:none">
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">IoT</button>
+				<button class="pure-button" onclick="setThingspeak()">Speichern</button>
+			</div>
+			<h3 class="headtitle">Thingspeak</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="checkbox">
+							  <label>
+								<input id="TSon" type="checkbox" checked="checked"/><i class="helper"></i>Thingspeak aktivieren
+							  </label>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="TSwrite" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Channel Write API Key</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="TShttp" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">ThingHTTP API Key</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="TSchID" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Channel ID</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <select id="TSinterval">
+								<option value="30">30 Sekunden</option>
+								<option value="60">1 Minute</option>
+								<option value="120">2 Minuten</option>
+								<option value="300">5 Minuten</option>
+							  </select>
+							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+							</div>
+							<div class="checkbox">
+							  <label>
+								<input id="TSshow8" type="checkbox" checked="checked"/><i class="helper"></i>Batterieladezustand anstatt CH8
+							  </label>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+			<h3 class="headtitle">Private MQTT Client</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="checkbox">
+							  <label>
+								<input id="PMQon" type="checkbox" checked="checked"/><i class="helper"></i>Private MQTT aktivieren
+							  </label>
+							</div>
+							<table class="table50" cellpadding="0" cellspacing="0" width="100%" border="0">
+								<tr>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQhost" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT Host</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQport" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT Port</label><i class="bar"></i>
+									</div>
+								  </td>
+								</tr>
+								<tr>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQuser" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT User</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>
+									<div class="form-group">
+										<input type="text" id="PMQpass" maxlength="26" required="required"/>
+										<label class="control-label" for="input">MQTT Password</label><i class="bar"></i>
+									</div>
+								  </td>
+								</tr>
+								<tr>
+								  <td>
+									<div class="form-group">
+									  <select id="PMQinterval">
+										<option value="10">10 Sekunden</option>
+										<option value="30">30 Sekunden</option>
+										<option value="60">1 Minute</option>
+										<option value="120">2 Minuten</option>
+										<option value="300">5 Minuten</option>
+									  </select>
+									  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+									</div>
+								  </td>
+								  <td>	
+									<div class="form-group">
+									  <select id="PMQqos">
+										<option value="0">0</option>
+										<option value="1">1</option>
+										<option value="2">2</option>
+									  </select>
+									  <label class="control-label" for="select">QoS</label><i class="bar"></i>
+									</div>
+								  </td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+			</div>
+			<h3 class="headtitle">NANO Cloud</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>							
+							<div class="checkbox">
+							  <label>
+								<input id="CLon" type="checkbox" checked="checked"/><i class="helper"></i>Nano Cloud aktivieren
+							  </label>
+							</div>
+							<div class="form-group">
+							  <input type="text" id="CLtoken" maxlength="26" required="required"/>
+							  <label class="control-label" for="input">Cloud Token</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <select id="CLinterval">
+								<option value="15">15 Sekunden</option>
+								<option value="30">30 Sekunden</option>
+								<option value="60">1 Minute</option>
+								<option value="120">2 Minuten</option>
+								<option value="300">5 Minuten</option>
+							  </select>
+							  <label class="control-label" for="select">Sendeintervall</label><i class="bar"></i>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
+		<div id="push_notification" class="content" style="display:none">
+			<!-- html for thingspeak-Site -->
+			<div class="pure-button-group footer_buttons" role="group">
+				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
+				<button class="pure-button pure-button-disabled">Notification</button>
+				<button class="pure-button" onclick="setPushNotification();">Speichern</button>
+			</div>
+			<h3 class="headtitle">Telegram</h3>
+			<div class="pure-g">
+				<div class="pure-u-1-1 pure-u-lg-1-1">
+					<div class="1-box channel_conf">
+						<form>	
+							<div class="checkbox">
+							  <label>
+								<input id="TGon" type="checkbox" checked="checked"/><i class="helper"></i>Telegram aktivieren
+							  </label>
+							</div>						
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="TGtoken" maxlength="50" required="required"/>
+							  <label class="control-label" for="input">Token</label><i class="bar"></i>
+							</div>
+							<div class="form-group">
+							  <input type="text" class="temp_input" id="TGid" maxlength="10" required="required"/>
+							  <label class="control-label" for="input">Chat ID</label><i class="bar"></i>
+							</div>
+							<!-- <a class="pure-button" href="" onclick="getChatID();">A Pure Button</a> -->
+							<p class="pure-button pure-button-primary" onclick="getChatID();">ChatID ermitteln</p>
+							<!-- <button class="" onSubmit="return false;">A Primary Button</button>														 -->
+						</form>
+					</div>
+				</div>
+			</div>
+        </div>
+		<!-- ################################################### -->
 		<div id="about" class="content" style="display:none">
 			<div class="pure-button-group footer_buttons" role="group">
 				<button class="pure-button" onclick="showIndex()">&#171;&nbsp;Back</button>
@@ -1963,7 +2481,7 @@
 	var chart_ts;
 	var unit = '°';
 	var pit_act = false;
-	var ch_name = new Array('#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', 'PIT set', 'PIT val');
+	var ch_name = new Array('#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', 'PIT set', 'PIT val','Battery');
 	HTTP_GET_VARS=new Array();
 	strGET=document.location.search.substr(1,document.location.search.length);
 	if(strGET!=''){
@@ -1981,7 +2499,7 @@
 		if(!HTTP_GET_VARS[v]){return 'undefined';}
 		return HTTP_GET_VARS[v];
 	}
-	var api_data = 'data.php?api_token=' + GET('api_token');
+	var api_data = 'data1.php?api_token=' + GET('api_token');
 	var api_data_test = api_data + '&chartHistory=true';
 	var byId = function( id ) { return document.getElementById( id ); };
 	var byClass = function( id ) { return document.getElementsByClassName( id ); };
@@ -1990,7 +2508,7 @@
 
 		var byId = function( id ) { return document.getElementById( id ); };
 	
-		var layout = byId('layout'),menu = byId('menu'),menuLink = byId('menuLink'),menuHome = byId('menuHome'),menuAbout = byId('menuAbout'),content  = byId('main');
+		var layout = byId('layout'),menu = byId('menu'),menuLink = byId('menuLink'),menuHome = byId('menuHome'),menuPitmaster = byId('menuPitmaster'),menuNotification = byId('menuNotification'),menuWlan = byId('menuWlan'),menuSystem = byId('menuSystem'),menuThingspeak = byId('menuThingspeak'),menuAbout = byId('menuAbout'),content  = byId('main');
 		function toggleClass(element, className) {
 			var classes = element.className.split(/\s+/),
 				length = classes.length,
@@ -2020,6 +2538,11 @@
 
 		menuLink.onclick = function (e) {toggleAll(e);};
 		menuHome.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showIndex();}};
+		menuWlan.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showWLAN();}};
+		menuThingspeak.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showThingspeak();}};
+		menuPitmaster.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showPitmaster();}};
+		menuNotification.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showPushNotification();}};
+		menuSystem.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showSystem();}};
 		menuAbout.onclick = function (e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);showAbout();}};
 		content.onclick = function(e) {if (menu.className.indexOf('active') !== -1) {toggleAll(e);}};
 	}(this, this.document));
@@ -2030,9 +2553,226 @@
 	});
 	
 	byId('index').style.display = "inline";
+	
+	function showWLAN(){
+		hideAll();
+		byId('wlan_config').style.display = "inline";
+		networklist();
+		networkscan();
+	}
+	
+	function wlan_active(){
+		if(byId('wlan_active').checked){
+	
+		}else{
+			txt = 'Soll die Wifi-Verbindung bis zum nächsten Restart des Systems wirklich abgeschaltet werden?';
+			if (confirm(txt) == true) {
+				loadJSON('stopwifi', '', '60000', function (response) {
+                  if(response == 'true'){      
+                    self.location.href='about:blank'
+                  }
+                });
+			} else {
+				byId('wlan_active').checked = true;
+			}
+		}
+	}
+	
+	function showPlot(){
+		hideAll();
+		byId('plot').style.display = "inline";
+	}	
+
+	function showThingspeak(){
+		hideAll();
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			byId('TSon').checked = jr.iot.TSon;
+			byId('TSwrite').value = jr.iot.TSwrite;
+			byId('TShttp').value = jr.iot.TShttp;
+			byId('TSchID').value = jr.iot.TSchID;
+			byId('TSinterval').value = jr.iot.TSint;
+			byId('TSshow8').checked = jr.iot.TSshow8;
+			byId('PMQon').checked = jr.iot.PMQon;
+			byId('PMQhost').value = jr.iot.PMQhost;
+			byId('PMQport').value = jr.iot.PMQport;
+			byId('PMQuser').value = jr.iot.PMQuser;
+			byId('PMQpass').value = jr.iot.PMQpass;
+			byId('PMQqos').value = jr.iot.PMQqos;
+			byId('PMQinterval').value = jr.iot.PMQint;
+			byId('CLon').checked = jr.iot.CLon;
+			byId('CLtoken').value = jr.iot.CLtoken;
+			byId('CLinterval').value = jr.iot.CLint;
+			byId('thingspeak').style.display = "inline";
+			showLoader('false');
+		})
 		
+	}	
+
+		function setThingspeak(){
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response){
+			jr = JSON.parse(response);
+			jr.iot.TSon = byId('TSon').checked;
+			jr.iot.TSwrite = byId('TSwrite').value;
+			jr.iot.TShttp = byId('TShttp').value;
+			jr.iot.TSchID = byId('TSchID').value;
+			jr.iot.TSint = byId('TSinterval').value;
+			jr.iot.TSshow8 = byId('TSshow8').checked;
+			jr.iot.PMQon = byId('PMQon').checked;
+			jr.iot.PMQhost = byId('PMQhost').value;
+			jr.iot.PMQport = byId('PMQport').value;
+			jr.iot.PMQuser = byId('PMQuser').value;
+			jr.iot.PMQpass = byId('PMQpass').value;
+			jr.iot.PMQqos = byId('PMQqos').value;
+			jr.iot.PMQint = byId('PMQinterval').value;
+			jr.iot.CLon = byId('CLon').checked;
+			jr.iot.CLtoken = byId('CLtoken').value;
+			jr.iot.CLint = byId('CLinterval').value;
+			var data = JSON.stringify(jr.iot);
+			//alert(data);
+			showLoader('true');
+			loadJSON('setIoT', data, '60000', function (response) {
+				showIndex();
+				showLoader('false');
+			})		
+		})
+	}
+	
+	function showPushNotification(){
+		hideAll();
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			byId('TGon').checked = jr.charts.TGon;
+			byId('TGtoken').value = jr.charts.TGtoken;
+			byId('TGid').value = jr.charts.TGid;
+			byId('push_notification').style.display = "inline";
+			showLoader('false');
+		})				
+	}
+
+	function getChatID(){
+		getRequest();
+	}
+	
+	function setPushNotification(){
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response){
+			jr = JSON.parse(response);
+			jr.charts.TGon = byId('TGon').checked;
+			jr.charts.TGtoken = byId('TGtoken').value;
+			jr.charts.TGid = byId('TGid').value;
+			var data = JSON.stringify(jr.charts);
+			//alert(data);
+			showLoader('true');
+			loadJSON('setIoT', data, '60000', function (response) {
+				showIndex();
+				showLoader('false');
+			})		
+		})
+	}
+	
+	function showSetWLAN(){
+		hideAll();
+		byId('wlan_set').style.display = "inline";
+	}	
+
+	function showSetChannel(channel){
+        hideAll();
+        showLoader('true');
+        loadJSON('settings', '', '3000', function (response) {
+            jr = JSON.parse(response);
+            clearOption('sensor');
+            for (var i = 0; i < jr.sensors.length; i++) {
+                byId('sensor').options[byId('sensor').options.length] = new Option(jr.sensors[i], i);
+            }
+            loadJSON(api_data, '', '3000', function (response) {
+                jr = JSON.parse(response);
+                byId('channel_settings_save').setAttribute('onclick','setChannel(' + channel + ');');
+                byId('channel_settings_headtitle').innerHTML  = jr.channel[channel].name;
+                byId('channel_name').value  = jr.channel[channel].name;
+                byId('temp_max').value  = jr.channel[channel].max;
+                byId('temp_min').value  = jr.channel[channel].min;
+                byId('color').value = jr.channel[channel].color;
+                byId('sensor').value = jr.channel[channel].typ;
+                byId('webalarm').checked = jr.channel[channel].alarm;
+                byId('channel_settings').style.display = "inline";
+                showLoader('false');
+            })
+        })
+    }
+
+	function setChannel(channel){
+		showLoader('true');
+		loadJSON(api_data, '', '3000', function (response) {
+			jr = JSON.parse(response);
+			jr.channel[channel].min = byId('temp_min').value;
+			jr.channel[channel].max = byId('temp_max').value;
+			jr.channel[channel].name = byId('channel_name').value;
+			jr.channel[channel].typ = byId('sensor').value;
+			jr.channel[channel].alarm = byId('webalarm').checked;
+			jr.channel[channel].color = byId('color').value;
+			var data = JSON.stringify(jr.channel[channel]);
+				//alert(data);
+			showLoader('true');
+			loadJSON('setchannels', data, '60000', function (response) {
+				showIndex();
+				showLoader('false');
+			})		
+		})	
+	}
+	
+	function clearOption(id){
+		var selectbox = document.getElementById(id);
+		var i;
+		for(i = selectbox.options.length - 1 ; i >= 0 ; i--)
+		{
+			selectbox.remove(i);
+		}
+	}
+	
+	function setWLAN(ssid, passwd){
+		showLoader('true');
+		var data='{"ssid":"' + ssid + '","password":"' + passwd + '"}';
+		loadJSON('setnetwork', data, '60000', function (response) {
+			showWLAN();
+			showLoader('false');
+		})
+		
+	}	
+	
+	function setThermoName(){
+		showLoader('true');
+		loadJSON('settings', '', '5000', function (response) {
+			jr = JSON.parse(response);
+			byId('thermoname').innerHTML = jr.system.host;
+			if(jr.system.getupdate == 'false'){
+				byClass("notification")[0].style.display = "none";
+			}else{
+				byClass("notification")[0].style.display = "inline";
+			}
+			showLoader('false');
+		})
+	}
+	
 	var updateActivated = 'false';
-		
+	
+	function checkUpdateActivated(){
+		loadJSON('updatestatus', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			if (jr == true){
+				showLoader('true');
+			}else if (jr == false){
+				showLoader('false')
+				updateActivated = 'false';
+				byClass("notification")[0].style.display = "none";
+				location.reload(true);
+			}
+		})	
+	}
+	
 	function showLoader(show){
 		if (show == 'true') {
 			byId('cover').classList.add("cover_active");
@@ -2042,6 +2782,245 @@
 			byId('spinner').classList.remove("spinner");
 		}
 	}
+	
+	function update(){
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			txt = 'Wollen Sie das aktuelle Update Installieren?\n\nAktuelle Version:' + jr.system.version + '\nNeue Version:' + jr.system.getupdate;
+			if (confirm(txt) == true) {
+				loadJSON('update', '', '60000', function (response) {
+					showLoader('true');
+					updateActivated = 'true';
+				});
+			} else {
+			
+			}						
+		})	
+	}
+	
+	function showSystem(){
+		hideAll();
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			byId('timezone').value = jr.system.utc;
+			byId('language').value = jr.system.language;
+			byId('hostname').value = jr.system.host;
+			byId('apname').value = jr.system.ap;
+			byId('thermoname').innerHTML = jr.system.host;
+			byId('unit').value = jr.system.unit;
+			byId('hwalarm').checked = jr.system.hwalarm;
+			byId('summer').checked = jr.system.summer;
+			byId('fastmode').checked = jr.system.fastmode;
+			byId('searchUpdate').checked = jr.system.autoupd;
+			clearOption('hwversion');
+			for (var i = 0; i < jr.hardware.length; i++) {
+				byId('hwversion').options[byId('hwversion').options.length] = new Option(jr.hardware[i], jr.hardware[i]);
+			}
+			byId('hwversion').value = jr.system.hwversion;
+			byId('system_config').style.display = "inline";
+			showLoader('false');
+		})
+	}
+	
+	function setSystem(){
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			jr.system.host = byId('hostname').value.replace(/ /g, '_');
+			jr.system.ap = byId('apname').value.replace(/ /g, '_');
+			jr.system.hwversion = byId('hwversion').value;
+			jr.system.utc = byId('timezone').value;
+			jr.system.language = byId('language').value;
+			jr.system.unit = byId('unit').value;
+			jr.system.hwalarm = byId('hwalarm').checked;
+			jr.system.summer = byId('summer').checked;
+			jr.system.fastmode = byId('fastmode').checked;		
+			jr.system.autoupd = byId('searchUpdate').checked;			
+			var data = JSON.stringify(jr.system);
+			showLoader('true');
+			loadJSON('setsystem', data, '60000', function (response) {
+				//alert(data);
+				byId('thermoname').innerHTML = jr.system.host;
+				showIndex();
+				showLoader('false');
+			})		
+		})	
+	}
+	
+	function showPitmaster(){		
+		hideAll();
+		showLoader('true');
+		loadJSON(api_data, '', '3000', function (response) {
+			jr = JSON.parse(response);
+			byId('pitmaster_typ').value = jr.pitmaster.typ;
+			clearOption('pitmaster_channel');
+			for (var i = 0; i < jr.channel.length; i++) {
+				byId('pitmaster_channel').options[byId('pitmaster_channel').options.length] = new Option('#' + jr.channel[i].number + ' - ' + jr.channel[i].name, jr.channel[i].number);
+			}
+			byId('pitmaster_channel').value = jr.pitmaster.channel;
+			byId('pitmaster_set').value = jr.pitmaster.set;
+			byId('pitmaster_value').value = jr.pitmaster.value;
+			byId('pitmaster_settings').style.display = "inline";
+			showLoader('false');
+			showPitmasterProfile(jr.pitmaster.pid);
+			changePitmasterTyp();
+		})
+	}
+	function changePitmasterTyp(){		
+		switch(byId('pitmaster_typ').value) {
+			case 'off':
+				byId('pitmaster_value_show').style.display = "none";
+				byId('pitmaster_channel_show').style.display = "none";
+				byId('pitmaster_set_show').style.display = "none";
+				byId('pitmaster_profile_show').style.display = "none";
+				byId('pid_settings_show').style.display = "none";
+				break;
+			case 'manual':
+				byId('pitmaster_value_show').style.display = "inline";	
+				byId('pitmaster_channel_show').style.display = "none";
+				byId('pitmaster_set_show').style.display = "none";
+				byId('pitmaster_profile_show').style.display = "inline";
+				byId('pid_settings_show').style.display = "none";
+
+				break;
+			case 'autotune':
+				byId('pitmaster_profile_show').style.display = "inline";
+				byId('pitmaster_value_show').style.display = "none";
+				byId('pitmaster_channel_show').style.display = "inline";
+				byId('pitmaster_set_show').style.display = "inline";
+				byId('pid_settings_show').style.display = "none";				
+				break;
+			case 'auto':
+				byId('pitmaster_profile_show').style.display = "inline";
+				byId('pitmaster_value_show').style.display = "none";
+				byId('pitmaster_channel_show').style.display = "inline";
+				byId('pitmaster_set_show').style.display = "inline";			
+				byId('pid_settings_show').style.display = "inline";
+				break;
+			default:
+				byId('pitmaster_profile_show').style.display = "inline";
+				byId('pitmaster_value_show').style.display = "inline";
+				byId('pitmaster_channel_show').style.display = "inline";
+				byId('pitmaster_set_show').style.display = "inline";
+				byId('pid_settings_show').style.display = "inline";
+		} 		
+	}
+	function setPitmaster(){
+		showLoader('true');
+		loadJSON(api_data, '', '3000', function (response) {
+			jr = JSON.parse(response);
+			jr.pitmaster.typ = byId('pitmaster_typ').value;
+			jr.pitmaster.channel = byId('pitmaster_channel').value;
+			jr.pitmaster.set = byId('pitmaster_set').value;
+			jr.pitmaster.value = byId('pitmaster_value').value
+			jr.pitmaster.pid = byId('pid_profile').value
+			var data = JSON.stringify(jr.pitmaster);
+			loadJSON('setpitmaster', data, '60000', function (response) {
+				//alert(data);
+				//setPitmasterProfile();
+				showIndex();
+				showLoader('false');
+			})	
+		})
+		showLoader('false');		
+	}
+	
+	function showPitmasterProfile(profile){
+		showLoader('true');
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			clearOption('pitmaster_profile_aktor');
+			clearOption('pid_profile');
+			for (var i = 0; i < jr.pid.length; i++) {
+				byId('pid_profile').options[byId('pid_profile').options.length] = new Option(jr.pid[i].name, i);
+			}
+			byId('pid_profile').value = profile;	
+			for (var i = 0; i < jr.aktor.length; i++) {
+				byId('pitmaster_profile_aktor').options[byId('pitmaster_profile_aktor').options.length] = new Option(jr.aktor[i], i);
+			}
+			byId('pitmaster_profile_aktor').value = jr.pid[profile].aktor;
+			byId('pid_name').value = jr.pid[profile].name;	
+			byId('pid_Kp').value = jr.pid[profile].Kp;	
+			byId('pid_Ki').value = jr.pid[profile].Ki;
+			byId('pid_Kd').value = jr.pid[profile].Kd;
+			byId('pid_Kp_a').value = jr.pid[profile].Kp_a;
+			byId('pid_Ki_a').value = jr.pid[profile].Ki_a;
+			byId('pid_Kd_a').value = jr.pid[profile].Kd_a;
+			byId('pid_DCmin').value = jr.pid[profile].DCmmin;
+			byId('pid_DCmax').value = jr.pid[profile].DCmmax;
+			showLoader('false');
+		})			
+	}
+	
+	function togglePitmasterView(){
+		if(byId('pitmaster_settings').style.display == "inline"){
+			byId('pitmaster_settings').style.display = "none";
+			byId('pitmaster_profile').style.display = "inline";		
+		}else{
+			byId('pitmaster_settings').style.display = "inline";
+			byId('pitmaster_profile').style.display = "none";	
+		}
+	}
+
+	function backPidProfile(){
+		showPitmasterProfile(byId('pid_profile').value);
+		togglePitmasterView();
+	}
+	
+	function setPitmasterProfile(){
+		loadJSON('settings', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			profile = byId('pid_profile').value;
+			jr.pid[profile].aktor = byId('pitmaster_profile_aktor').value;
+			jr.pid[profile].name = byId('pid_name').value;
+			jr.pid[profile].Kp = byId('pid_Kp').value;
+			jr.pid[profile].Ki = byId('pid_Ki').value;
+			jr.pid[profile].Kd = byId('pid_Kd').value;
+			jr.pid[profile].Kp_a = byId('pid_Kp_a').value;
+			jr.pid[profile].Ki_a = byId('pid_Ki_a').value;
+			jr.pid[profile].Kd_a = byId('pid_Kd_a').value;
+			jr.pid[profile].DCmmin = byId('pid_DCmin').value;
+			jr.pid[profile].DCmmax = byId('pid_DCmax').value;
+			var data = JSON.stringify(jr.pid);
+			loadJSON('setpid', data, '60000', function (response) {
+				//alert(data);
+				togglePitmasterView();
+			})	
+		})
+		showLoader('false');	
+	}
+	
+	function setDC(dc){
+		if(dc == '0'){
+			var_val = byId('pid_DCmin').value;
+		}else{
+			var_val = byId('pid_DCmax').value;
+		}
+		txt = 'Soll der Pitmasterausgang für 10Sekunden mit ' + var_val + '% angesteuert werden?';
+		if (confirm(txt) == true) {
+			showLoader('true');
+			data = '?aktor=' + byId('pitmaster_profile_aktor').value + '&dc=' + dc + '&val=' + var_val;
+			loadJSON('setDC' + data, '', '60000', function (response) {
+				//alert(data);
+			})	
+			showLoader('false');
+		} else {
+
+		}		
+	}
+	
+	function getRequest(){
+		data = "?host='http://nano.norma.uberspace.de'&url='/telegram.php?token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc'&method=GET";
+		loadJSON('getRequest', data, '60000', function (response) {
+			jr = JSON.parse(response);
+			alert(jr);
+		})
+	}
+	function showChart(){
+		hideAll();
+		byId('chart_config').style.display = "inline";
+	}	
 	
 	function showIndex(){
 		hideAll();
@@ -2054,7 +3033,7 @@
 	}	
 
 	function hideAll(){
-		hideIDs = ['index','about'];
+		hideIDs = ['index','wlan_config','system_config','system_config','about','wlan_set','thingspeak','push_notification','channel_settings','pitmaster_settings','pitmaster_profile'];
 		for (var i = 0; i < hideIDs.length; i++) {
 			byId(hideIDs[i]).style.display = "none";
 		}
@@ -2140,10 +3119,34 @@
 			return data;		
 		}
 	}
+
+	function getWifiSecureIcon(data){
+		var lock = getIcon('lock');
+		var unlock = getIcon('unlock');
+		switch(data) {
+			case 2: //ENC_TYPE_TKIP - WPA / PSK
+				return lock;
+				break;
+			case 4: //ENC_TYPE_CCMP - WPA2 / PSK
+				return lock;
+				break;
+			case 5: //ENC_TYPE_WEP - WEP
+				return lock;
+				break;
+			case 7: //ENC_TYPE_NONE - open network
+				return unlock;
+			break;
+			case 8:	//ENC_TYPE_AUTO - WPA / WPA2 / PSK
+				return lock;
+				break;	
+			default:
+				return lock;
+		} 
+	}
 	
 	function readTemp(){
 		if (updateActivated == 'true'){
-				//checkUpdateActivated();
+				checkUpdateActivated();
 		}else{
 			loadJSON(api_data, '', '3000', function (response) {
 				if (response == 'false'){
@@ -2205,13 +3208,112 @@
 						}
 					}
 				}
-				if(chart_ts != jr.system.time && pit_act === true){
+				if(chart_ts != jr.system.time && jr.length < 1){
 					addData(timeConverter(jr.system.time),jr,true);
 					chart_ts = jr.system.time;
 				}
 				
 			})
 		}
+	}
+	
+	function networkscan(){
+		loadJSON('networkscan', '', '3000', function (response) {
+			byId('networkrefresh').innerHTML = '<h3><span class="icon-refresh icon-rotate-50" onclick="networkscan();"></span></h3>'
+			//getIcon('refresh icon-rotate-50')
+			if (response == "OK"){
+				setTimeout("networklist();", 3000);
+			}
+		})
+	}
+	
+	function networklist(){
+		loadJSON('networklist', '', '3000', function (response) {
+			jr = JSON.parse(response);
+			byId('networklist').innerHTML = '';
+			byId('networkconnect').innerHTML = '';
+			var table_networklist = byId('networklist');
+			var table_networkconnect = byId('networkconnect');
+			if (jr.Connect){			
+				var row = table_networkconnect.insertRow(0);
+				addCell(row,getIcon('ok'),'row-Check','0');
+				addCell(row,jr.SSID,'row-SSID','1');
+				addCell(row,getRSSIIcon(jr.RSSI),'row-RSSI','2');
+				addCell(row,getWifiSecureIcon(jr.Enc),'row-Enc','3');
+				addCell(row,'','row-link','4');								
+			}
+			NetworkconnectRowClick();
+			for (var i = 0; i < jr.Scan.length; i++) {
+				var row = table_networklist.insertRow(-1);
+				addCell(row,'','row-Check','0');
+				addCell(row,jr.Scan[i].SSID,'row-SSID','1');
+				addCell(row,getRSSIIcon(jr.Scan[i].RSSI),'row-RSSI','2');
+				addCell(row,getWifiSecureIcon(jr.Scan[i].Enc),'row-Enc','3');
+				addCell(row,getIcon('circle-right'),'row-link','4');
+			}
+			byId('networkrefresh').innerHTML = '<h3><span class="icon-refresh" onclick="networkscan();"></span></h3>'
+			NetworklistRowClick();
+		})
+	}
+	function addCell(row,cellinnerHtml,cellClass,nr){
+		var cell = row.insertCell(nr);
+		cell.innerHTML = cellinnerHtml;
+		cell.className = cellClass;
+	}
+	
+	var ssidInput;
+	function NetworklistRowClick() {
+		var table = document.getElementById("networklist");
+		var rows = table.rows; // or table.getElementsByTagName("tr");
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].onclick = (function() { // closure
+				var cnt = i; // save the counter to use in the function
+				return function() {
+					document.getElementsByName('ssidInput')[0].value = this.cells[1].innerHTML;
+					document.getElementsByName('ssidPasswordInput')[0].value = null;
+					ssidInput = this.cells[1].innerHTML;
+					showSetWLAN();
+				}    
+			})(i);
+		}
+	}
+	 
+	function setssidInput(){
+		document.getElementsByName('ssidInput')[0].value = ssidInput;
+	}
+	
+	function NetworkconnectRowClick() {
+		var table = byId('networkconnect');
+		var rows = table.rows; // or table.getElementsByTagName("tr");
+		for (var i = 0; i < rows.length; i++) {
+			rows[i].onclick = (function() { // closure
+				var cnt = i; // save the counter to use in the function
+				return function() {
+				}    
+			})(i);
+		}
+	}
+	
+	function validateNumber(number,decimal) {
+		val = number.value.replace(/[^0-9.,]/g,'').replace(/[,]/g, '.');
+		switch(decimal) {
+			case '1': 
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];}
+				break;
+			case '2': 
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,2})?/)[0];}
+				break;
+			case '3':
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,3})?/)[0];}
+				break;
+			case '4':
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,4})?/)[0];}
+				break;	
+			default:
+				if(val){val = val.toString().match(/^-?\d+(?:\.\d{0,1})?/)[0];}
+		} 
+		if(val.split('.').length>2){val = val.replace(/\.+$/,"");}		
+		number.value = val;
 	}
 	
 	function timeConverter(UNIX_timestamp){
@@ -2231,19 +3333,19 @@
 	  //alert(unix + ' ' + UNIX_timestamp);
 	  return time;
 	}
-	Chart.defaults.global.animationSteps = 50;
-	Chart.defaults.global.tooltipYPadding = 16;
-	Chart.defaults.global.tooltipCornerRadius = 0;
-	Chart.defaults.global.defaultFontColor= 'white';
-	Chart.defaults.global.tooltipTitleFontStyle = "normal";
-	Chart.defaults.global.tooltips.mode = "index";
-	Chart.defaults.global.tooltips.intersect = false;
-	Chart.defaults.global.legend.labels.boxWidth = 15;
-	//Chart.defaults.global.tooltipFillColor = "rgba(0,160,0,0.8)";
-	Chart.defaults.global.animationEasing = "easeOutBounce";
-	Chart.defaults.global.responsive = true;
-	//Chart.defaults.global.scaleLineColor = "black";
-	Chart.defaults.global.scaleFontSize = 16;
+Chart.defaults.global.animationSteps = 50;
+Chart.defaults.global.tooltipYPadding = 16;
+Chart.defaults.global.tooltipCornerRadius = 0;
+Chart.defaults.global.defaultFontColor= 'white';
+Chart.defaults.global.tooltipTitleFontStyle = "normal";
+Chart.defaults.global.tooltips.mode = "index";
+Chart.defaults.global.tooltips.intersect = false;
+Chart.defaults.global.legend.labels.boxWidth = 15;
+//Chart.defaults.global.tooltipFillColor = "rgba(0,160,0,0.8)";
+Chart.defaults.global.animationEasing = "easeOutBounce";
+Chart.defaults.global.responsive = true;
+//Chart.defaults.global.scaleLineColor = "black";
+Chart.defaults.global.scaleFontSize = 16;
     var myContext = document.getElementById("nanoChart");
     var myChartConfig = {
       type: 'line',
@@ -2314,6 +3416,14 @@
 			   borderColor: 'rgba(0, 0, 0, 0.2)',
 			   borderWidth: 1,
 			   data: []
+           },{
+			   label: "Battery",
+			   yAxisID: "B", 
+			   radius: 0,
+			   lineTension: 0,
+			   borderColor: 'white',
+			   borderWidth: 1,
+			   data: []
            }
         ]
       },
@@ -2344,7 +3454,7 @@
 					position: 'right',
 					ticks:{
 						userCallback: function(label, index, labels) {
-							return label.toFixed(1) + '°' + unit;
+							return label + '°' + unit;
 						}
 					}
 				},{
@@ -2365,7 +3475,7 @@
             enabled: true,
             callbacks: {
                 label: function(tooltipItems, data) { 
-					if(tooltipItems.datasetIndex == '9'){
+					if(tooltipItems.datasetIndex == '9' || tooltipItems.datasetIndex == '10'){
 						return tooltipItems.yLabel + '%' + ' - ' + ch_name[tooltipItems.datasetIndex];
 					}else{
 						return tooltipItems.yLabel + '°' + unit + ' - ' + ch_name[tooltipItems.datasetIndex];
@@ -2386,7 +3496,7 @@ function loadChartData(){
 		var response = response_1.split(";");
 		for (var i = 0; i < response.length -1; i++) {			
 			jr = JSON.parse(response[i]);
-			if(chart_ts != jr.system.time && jr.length < 1){
+			if(chart_ts != jr.system.time){
 				addData(timeConverter(jr.system.time),jr,false);
 				chart_ts = jr.system.time;
 			}	
@@ -2408,7 +3518,7 @@ function addData(timestamp,jr,update){
 			nanoChart.data.datasets[i].data.push(null);
 		}else{
 			//nanoChart.data.datasets[i].showLine = true;
-			nanoChart.data.datasets[i].data.push(jr.channel[i].temp.toFixed(1) );
+			nanoChart.data.datasets[i].data.push(jr.channel[i].temp );
 		}
 	}
 	nanoChart.data.datasets[8].fill = false;
@@ -2419,6 +3529,8 @@ function addData(timestamp,jr,update){
 		nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
 		nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
 	}
+	nanoChart.data.datasets[10].fill = false;
+	nanoChart.data.datasets[10].data.push(jr.system.soc);	
 	if(update === true){
 		nanoChart.update();	
 	}

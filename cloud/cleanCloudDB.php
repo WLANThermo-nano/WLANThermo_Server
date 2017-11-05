@@ -7,6 +7,7 @@ require_once("/var/www/virtual/nano/config.inc.php");
 
 SimpleLogger::info("------------------------------------------------------------\n");
 SimpleLogger::info("starting clean process...\n");
+$githubApiUrl = 'https://api.github.com/repos/WLANThermo-nano/WLANThermo_nano_Software/releases';
 
 // Connecting to database
 try {
