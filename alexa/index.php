@@ -1,81 +1,124 @@
 <?php
-/* @author Florian Riedl */
 error_reporting(E_ALL);
+require_once("../../config.inc.php");
+/* @author Florian Riedl
+ */	
 
-// message.php?serial=54gfdgf&token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc&chatID=399660681&ch=0&msg=up&lang=de&service=pushover
-if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['token']) AND !empty($_GET['token']) AND isset($_GET['chatID']) AND !empty($_GET['chatID']) AND isset($_GET['ch']) AND isset($_GET['msg']) AND !empty($_GET['msg']) AND isset($_GET['lang']) AND !empty($_GET['lang']) AND isset($_GET['service']) AND !empty($_GET['service'])){
-	switch ($_GET['service']) {
-    case telegram:
-		sendTelegram($_GET['token'],$_GET['chatID'],getMsg($_GET['ch'],$_GET['msg'],$_GET['lang']));
-        break;
-    case pushover:
-		sendPushover($_GET['token'],$_GET['chatID'],getMsg($_GET['ch'],$_GET['msg'],$_GET['lang']));
-        break;
+SimpleLogger::info("############################################################\n");
+ob_start('ob_gzhandler');
+	try {
+		SimpleLogger::info("Connecting to the database...\n");
+		$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
+		$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
+		$dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING );
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
 	}
-}else{
-	die('false');
-}
-
-
-//sendTelegram('344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc','399660681',getMsg('0','up','de'));
-//echo getMsg('0','up','de');
-
-function getMsg($ch,$msg,$lang){
-$de = array("msg0" => "ACHTUNG!","msg1" => "Kanal","msg2" => "hat","up" => "Übertemperatur","down" => "Untertemperatur");
-$en = array("msg0" => "ATTENTION!","msg1" => "Channel","msg2" => "has","up" => "overtemperature","down" => "undertemperature");
 	
-	switch ($lang) {
-    case de:
-		$message = ''.$de["msg0"].' '.$de["msg1"].''.$ch.' '.$de["msg2"].' '.$de["".$msg.""].'.';
-        return $message;
-        break;
-    case en:
-		$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
-        return $message;
-        break;
-    default:
-		$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
-		return $message;
+$api_token = '';
+$ajson = file_get_contents('php://input');
+SimpleLogger::debug("".$ajson."\n");
+$json = json_decode( $ajson, true );
+if($json['context']['System']['user']['userId'] == 'amzn1.ask.account.AF53TRZJOXEUM42TT37HJ3ZVTWMFAQ2RVZR3GB7WKVQWW53ZFY3ZTOJIHIDO33Q6FXMQ4SZOD4EE7Q4E6VKKEHI3FWP24F7UOJDOZVICRXVVHHHZW7WOCT5XMHRRAHL2WKT7SE2XHP5ZCZYSHJCLXKMCZO5ZQ5SI5S4JDG3SS3OFMJR32YVLLLQ4CRV4QL6ZRWHRMYGGQOWX6QI'){
+	$api_token = '84d1ac5a14be11f1';
+}else if($json['context']['System']['user']['userId'] == 'amzn1.ask.account.AHRWVU7HQMN7QWKRRYGEVQ65CUVC53W36ITO34I2BWIQLVJH7DFYJ73MBRZCFJPPMVVOVLMVMPM73TVWOQ526J623PDMIV44ZGAT5NNNVDHHW4NXZ6VPQT75MMBJCHWSVWN6P74QAV3U35QXWDYHUCMBMMQKJ3EEI4ISV26TBBPPPRONXUCECOIKGSCIW7SHDBQZGJ274QAIPVQ'){
+	$api_token = '82e49e0319aa1623';	
+}else{
+	$api_token = '84d1ac5a14be11f1';
+}
+
+$responseArray = [
+            'version' => '1.0',
+            'response' => [
+                  'outputSpeech' => [
+                        'type' => 'PlainText',
+                        'text' => 'Hallo, ich bin Alexa und dein Griller gehört jetzt mir.',
+                        'ssml' => null
+                  ],
+				  'card' => [
+						'type' => 'Simple',
+						'title' => 'Aktivierung',
+						'content' => 'Bitte aktiviere deinen Skill.'
+				  ],
+                  'shouldEndSession' => true
+            ]
+		];
+	  
+function getData($dbh,$api_token){
+	try {
+		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token ORDER BY id DESC LIMIT 1";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':api_token', $api_token);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		if ($statement->rowCount() > 0) {
+		  return($statement->fetch()['data']);
+		} else {
+		  return false;
+		}
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (getData)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
 	}
+}	
+$data = getData($dbh,$api_token);
+$arr = json_decode( $data, true );
+
+switch ($json['request']['intent']['name']) {
+    case 'nanoAll':
+		if ($arr['channel'][0]['temp'] == 999){
+			$responseArray['response']['outputSpeech']['text'] = 'Aktuell ist auf Kanal 1 kein Fühler angeschlossen';
+		}else if($arr['channel'][0]['temp'] < 5){
+			$responseArray['response']['outputSpeech']['text'] = 'Kanal 1 ist arsch kalt.';
+		}else{
+			$responseArray['response']['outputSpeech']['text'] = 'Deine Temperatur auf Kanal 1 beträgt '.str_replace(".", ",",$arr['channel'][0]['temp']).' Grad.';
+		}   
+		break;
+	case 'nanoCH':
+		if($arr['channel'][$json['request']['intent']['slots']['number']['value'] - 1]['temp'] == 999){
+			$responseArray['response']['outputSpeech']['text'] = 'Aktuell ist auf Kanal '.$json['request']['intent']['slots']['number']['value'].' kein Fühler angeschlossen.';
+		}else{
+			$responseArray['response']['outputSpeech']['text'] = 'Deine Temperatur auf Kanal '.$json['request']['intent']['slots']['number']['value'].' beträgt '.str_replace('.', ',',$arr['channel'][$json['request']['intent']['slots']['number']['value'] - 1]['temp']).' Grad.';
+		}
+		//if($json['request']['intent']['slots']['number']['value']
+        break;
+    case 'nanoBattery':
+        $responseArray['response']['outputSpeech']['text'] = 'Der Akkustand beträgt '.$arr['system']['soc'].' %';
+        break;
+	case 'nanoCHname':
+        $responseArray['response']['outputSpeech']['text'] = 'Dieser Dienst ist nich verfügbar';
+        break;
+	default:
+		if ($arr['channel'][0]['temp'] == 999){
+			$responseArray['response']['outputSpeech']['text'] = 'Aktuell ist auf Kanal 1 kein Fühler angeschlossen';
+		}else if($arr['channel'][0]['temp'] < 5){
+			$responseArray['response']['outputSpeech']['text'] = 'Kanal 1 ist arsch kalt.';
+		}else{
+			$responseArray['response']['outputSpeech']['text'] = 'Deine Temperatur auf Kanal 1 beträgt '.str_replace(".", ",",$arr['channel'][0]['temp']).' Grad.';
+		}
+		break;
 }
 
-function sendTelegram($token,$chatID,$msg){
-	$url = 'https://api.telegram.org/bot' . $token . '/sendMessage?text="'.$msg.'"&chat_id='.$chatID.'';
-	$result = json_decode(file_get_contents($url));
-	//var_dump($result);
-	if($result->ok === true){
-		SimpleLogger::info("Message has been sent! - device(".$_GET['serial'].") \n");
-	}else{
-		SimpleLogger::error("Message could not be sent! - device(".$_GET['serial'].") \n");
-		SimpleLogger::debug(json_encode($result) . "\n");		
-	}
-}
-
-function sendPushover($token,$chatID,$msg){
-	curl_setopt_array($ch = curl_init(), array(
-	  CURLOPT_URL => "https://api.pushover.net/1/messages.json",
-	  CURLOPT_POSTFIELDS => array(
-		"token" => $token,
-		"user" => $chatID,
-		"message" => $msg,
-	  ),
-	  CURLOPT_SAFE_UPLOAD => true,
-	  CURLOPT_RETURNTRANSFER => true,
-	));
-	curl_exec($ch);
-	curl_close($ch);
 
 
-	// $url = 'https://api.pushover.net/1/messages.json';
-	// $ch = curl_init($url); // cURL ínitialisieren
-	// curl_setopt($ch, CURLOPT_HEADER, 0); // Header soll nicht in Ausgabe enthalten sein
-	// curl_setopt($ch, CURLOPT_POST, 1); // POST-Request wird abgesetzt
-	// curl_setopt($ch, CURLOPT_POSTFIELDS, 'token=' . $token . '&user= '.$chatID.' &message="'.$msg.'"'); // POST-Felder festlegen, die gesendet werden sollen
-	// curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	// curl_exec($ch); // Ausführen
-	// curl_close($ch); // Objekt schließen und Ressourcen freigeben
-}
 
+
+
+
+
+header ( 'Content-Type: application/json' );
+echo json_encode ( $responseArray );
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
 // Needed by strftime() => error message otherwise
 date_default_timezone_set ( 'Europe/Berlin' );
  
@@ -103,7 +146,7 @@ class SimpleLogger
    *
    * @var string
    */
-  private static $filePath = 'logs/sendTelegram.log';
+  private static $filePath = 'html/logs/alexa.log';
   //private static $filePath = 'html/logs/strftime'.("%Y%m%d").'searchUpdate.log';	 
   /**
    * Log file size in MB
@@ -124,7 +167,7 @@ class SimpleLogger
   public static function log($level, $message /*,...*/)
   {
 	clearstatcache ();
-	$filePath = 'logs/'.strftime("%Y-%m-%d").'_sendTelegram.log';
+	$filePath = '../logs/'.strftime("%Y-%m-%d").'_alexa.log';
 	if (! is_int ( $level ))
 	{
 	  $message = $level;
@@ -162,7 +205,7 @@ class SimpleLogger
 	  case self::ALERT:    $levelStr = "ALERT"; break;
 	  case self::EMERGENCY:$levelStr = "EMERG"; break;
 	}
-	$filePath = 'logs/'.strftime("%Y-%m-%d").'_sendTelegram.log';
+	$filePath = '../logs/'.strftime("%Y-%m-%d").'_alexa.log';
 	$fd = fopen ( $filePath, $mode );
 	if ($fd)
 	{
@@ -304,40 +347,9 @@ class SimpleLogger
 	self::debug ( sprintf ( "Contents of %s\n%s\n", gettype ( $o ), $out ) );
   }
 }
-// $bot_id = "344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc";
-
-// if (isset($_GET['token'])){
- 	
- # Note: you want to change the offset based on the last update_id you received
-// $ch = curl_init();
-// // Disable SSL verification
-// curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-// // Will return the response, if false it print the response
-// curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-// // Set the url
-// curl_setopt($ch, CURLOPT_URL, $url);
-// //curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-// //curl_setopt($ch, CURLOPT_USERPWD, "$usernamearray[$usernamekey]:$passwd");
-// curl_setopt($ch, CURLOPT_HTTPHEADER, array('User-Agent: ESP8285'));
-// // Execute
-// $result = curl_exec($ch);
-// echo $result;
-// }else{
-	// echo 'false';
-	
-// }
+?>
 
 
+ 
+?>
 
-//$result = json_decode($result, true);
-
-// foreach ($result['result'] as $message) {
-    // var_dump($message);
-// }
-
-
-// # The chat_id variable will be provided in the getUpdates result
-
-// $result = json_decode($result, true);
-
-// var_dump($result['result']);
