@@ -2214,7 +2214,7 @@
 						chart_ts = jr.system.time;
 					}					
 				} catch(e) {
-					alert(e); // error in the above string (in this case, yes)!
+					alert(e + 'Hallo'); // error in the above string (in this case, yes)!
 				}
 			})
 		}
@@ -2388,21 +2388,22 @@ function loadChartData(){
 		if (response_1 == 'false'){
 			alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
 			window.location = "http://www.wlanthermo.com/";
-		}
-		var response = response_1.split(";");
-		for (var i = 0; i < response.length -1; i++) {			
-			try {
-				jr = JSON.parse(response[i]);
-				if(chart_ts != jr.system.time){
-					addData(timeConverter(jr.system.time),jr,false);
-					chart_ts = jr.system.time;
+		}else{
+			var response = response_1.split(";");
+				for (var i = 0; i < response.length -1; i++) {			
+					try {
+						jr = JSON.parse(response[i]);
+						if(chart_ts != jr.system.time){
+							addData(timeConverter(jr.system.time),jr,false);
+							chart_ts = jr.system.time;
+						}
+					} catch(e) {
+						//alert(e); // error in the above string (in this case, yes)!
+					}	
 				}
-			} catch(e) {
-				alert(e); // error in the above string (in this case, yes)!
-			}	
+			pit_act = true;
+			readTemp();
 		}
-		pit_act = true;
-		readTemp();		
 	})
 }  
   
