@@ -1,34 +1,32 @@
 <?php
 error_reporting(E_ALL);
 require_once("../../config.inc.php");
+ob_start('ob_gzhandler');
 /* @author Florian Riedl
  */	
 
-SimpleLogger::info("############################################################\n");
-ob_start('ob_gzhandler');
-	try {
-		SimpleLogger::info("Connecting to the database...\n");
-		$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
-		$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
-		$dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING );
-	} catch (PDOException $e) {
-		SimpleLogger::error("An error has occurred\n");
-		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
-		die('false');
-	}
-	
-$api_token = '';
-$ajson = file_get_contents('php://input');
-SimpleLogger::debug("".$ajson."\n");
-$json = json_decode( $ajson, true );
-if($json['context']['System']['user']['userId'] == 'amzn1.ask.account.AF53TRZJOXEUM42TT37HJ3ZVTWMFAQ2RVZR3GB7WKVQWW53ZFY3ZTOJIHIDO33Q6FXMQ4SZOD4EE7Q4E6VKKEHI3FWP24F7UOJDOZVICRXVVHHHZW7WOCT5XMHRRAHL2WKT7SE2XHP5ZCZYSHJCLXKMCZO5ZQ5SI5S4JDG3SS3OFMJR32YVLLLQ4CRV4QL6ZRWHRMYGGQOWX6QI'){
-	$api_token = '84d1ac5a14be11f1';
-}else if($json['context']['System']['user']['userId'] == 'amzn1.ask.account.AHRWVU7HQMN7QWKRRYGEVQ65CUVC53W36ITO34I2BWIQLVJH7DFYJ73MBRZCFJPPMVVOVLMVMPM73TVWOQ526J623PDMIV44ZGAT5NNNVDHHW4NXZ6VPQT75MMBJCHWSVWN6P74QAV3U35QXWDYHUCMBMMQKJ3EEI4ISV26TBBPPPRONXUCECOIKGSCIW7SHDBQZGJ274QAIPVQ'){
-	$api_token = '82e49e0319aa1623';	
-}else{
-	$api_token = '84d1ac5a14be11f1';
-}
+// Datenbankverbindung aufbauen --------------------------------------------------------- 
 
+try {
+	SimpleLogger::info("############################################################\n");
+	SimpleLogger::info("Connecting to the database...\n");
+	$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
+	$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
+	$dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING );
+} catch (PDOException $e) {
+	SimpleLogger::error("An error has occurred\n");
+	SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+	die('false');
+}
+	
+// Übergebenes JSON einlesen ------------------------------------------------------------	
+//$ajson = file_get_contents('php://input');
+//SimpleLogger::debug("".$ajson."\n");
+$json = json_decode( file_get_contents('php://input'), true );
+SimpleLogger::debug("".file_get_contents('php://input')."\n");
+
+$api_token = $json['session']['application']['applicationId'];
+			
 $responseArray = [
             'version' => '1.0',
             'response' => [
@@ -37,33 +35,10 @@ $responseArray = [
                         'text' => 'Hallo, ich bin Alexa und dein Griller gehört jetzt mir.',
                         'ssml' => null
                   ],
-				  'card' => [
-						'type' => 'Simple',
-						'title' => 'Aktivierung',
-						'content' => 'Bitte aktiviere deinen Skill.'
-				  ],
                   'shouldEndSession' => true
             ]
 		];
-	  
-function getData($dbh,$api_token){
-	try {
-		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token ORDER BY id DESC LIMIT 1";
-		$statement = $dbh->prepare($sql);
-		$statement->bindValue(':api_token', $api_token);
-		$statement->execute();
-		$statement->setFetchMode(PDO::FETCH_ASSOC);
-		if ($statement->rowCount() > 0) {
-		  return($statement->fetch()['data']);
-		} else {
-		  return false;
-		}
-	} catch (PDOException $e) {
-		SimpleLogger::error("An error has occurred - (getData)\n");
-		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
-		die('false');
-	}
-}	
+$responseArray = activate_skill($json['session']['application']['applicationId']);
 $data = getData($dbh,$api_token);
 $arr = json_decode( $data, true );
 
@@ -103,21 +78,46 @@ switch ($json['request']['intent']['name']) {
 }
 
 
-
-
-
-
-
-
 header ( 'Content-Type: application/json' );
 echo json_encode ( $responseArray );
+  
+function activate_skill($id){
+	return $responseArray = [
+		'version' => '1.0',
+			'response' => [
+				'outputSpeech' => [
+					'type' => 'PlainText',
+					'text' => 'Hallo, ich bin Alexa und dein Griller gehört jetzt mir.',
+					'ssml' => null
+				],
+				'card' => [
+					'type' => 'Simple',
+					'title' => 'Aktivierung',
+					'content' => 'Bitte lasse deinen Skill aktivieren. Schicke deine ID "'.$id.'" und deine WLANThermo nano Seriennummer an die Entwickler.'
+				],
+				'shouldEndSession' => true
+			]
+		];
+}	
  
-
- 
- 
- 
- 
- 
+ function getData($dbh,$api_token){
+	try {
+		$sql = "SELECT t2.data FROM `devices` as t1, `cloud` as t2 WHERE  t1.serial = t2.serial and t1.amazon_token = :api_token ORDER BY t2.id DESC LIMIT 1";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':api_token', $api_token);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		if ($statement->rowCount() > 0) {
+		  return($statement->fetch()['data']);
+		} else {
+		  return false;
+		}
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (getData)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
+	}
+}
  
 // Needed by strftime() => error message otherwise
 date_default_timezone_set ( 'Europe/Berlin' );
