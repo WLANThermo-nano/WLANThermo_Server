@@ -2151,7 +2151,7 @@
 			loadJSON(api_data, '', '3000', function (response) {
 				if (response == 'false'){
 					alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
-					 window.location = "http://www.wlanthermo.de/";
+					 window.location = "http://www.wlanthermo.com/";
 				}
 				jr = JSON.parse(response);
 				unit = jr.system.unit;
@@ -2378,7 +2378,7 @@
         }
 	  }
 	};
-  var nanoChart = new Chart(myContext, myChartConfig);   
+var nanoChart = new Chart(myContext, myChartConfig);   
 
 function loadChartData(){
 	loadJSON(api_data_test, '', '10000', function (response_1) {
@@ -2403,31 +2403,39 @@ function addData(timestamp,jr,update){
 	nanoChart.data.labels.push(timestamp);
 	var i;
 	for (i = 0; i < jr.channel.length; i++) {
-		nanoChart.data.datasets[i].borderColor = jr.channel[i].color;
-		nanoChart.data.datasets[i].backgroundColor = jr.channel[i].color;
-		nanoChart.data.datasets[i].fill = false;
-		if (jr.channel[i].temp == '999'){
-		//nanoChart.data.datasets[i].showLine = false;
-			nanoChart.data.datasets[i].data.push(null);
+		if(typeof jr.channel[i].temp !== "undefined"){
+			nanoChart.data.datasets[i].borderColor = jr.channel[i].color;
+			nanoChart.data.datasets[i].backgroundColor = jr.channel[i].color;
+			nanoChart.data.datasets[i].fill = false;
+			if (jr.channel[i].temp == '999'){
+			//nanoChart.data.datasets[i].showLine = false;
+				nanoChart.data.datasets[i].data.push(null);
+			}else{
+				//nanoChart.data.datasets[i].showLine = true;
+				nanoChart.data.datasets[i].data.push(jr.channel[i].temp.toFixed(1) );
+			}
 		}else{
-			//nanoChart.data.datasets[i].showLine = true;
-			nanoChart.data.datasets[i].data.push(jr.channel[i].temp.toFixed(1) );
+			nanoChart.data.datasets[i].data.push(null);
 		}
 	}
 	nanoChart.data.datasets[8].fill = false;
-    if(jr.pitmaster.typ == 'off'){
+    if(typeof jr.pitmaster.typ !== "undefined" && typeof jr.pitmaster.set !== "undefined" && typeof jr.pitmaster.value !== "undefined"){
+		if(jr.pitmaster.typ == 'off'){
+			nanoChart.data.datasets[8].data.push(null);
+			nanoChart.data.datasets[9].data.push(null);	
+		}else{
+			nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
+			nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
+		}
+	}else{
 		nanoChart.data.datasets[8].data.push(null);
 		nanoChart.data.datasets[9].data.push(null);	
-	}else{
-		nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
-		nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
 	}
 	if(update === true){
 		nanoChart.update();	
 	}
 
 }
-
 
 readTemp();	
 loadChartData();	
