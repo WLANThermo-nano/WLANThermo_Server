@@ -2153,66 +2153,69 @@
 					alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
 					 window.location = "http://www.wlanthermo.com/";
 				}
-				jr = JSON.parse(response);
-				unit = jr.system.unit;
-				BatteryIcon = getBatteryIcon(jr.system.soc,jr.system.charge);
-				byClass("battery")[0].innerHTML = BatteryIcon;
-				byId('thermoname').innerHTML = timeConverter(jr.system.time);
-				RSSIIcon = getRSSIIcon(jr.system.rssi);
-				byClass("wifi")[0].innerHTML = RSSIIcon;
-				var x = byClass("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
-				var i;
-				for (i = 0; i < x.length; i++) {
-					ch_name[i] = '#' + jr.channel[i].number + ' ' + jr.channel[i].name;
-					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
-					x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
-					if(jr.pitmaster.typ == 'auto' || jr.pitmaster.typ == 'autotune'){
-						if (jr.pitmaster.channel == jr.channel[i].number){
-							var a = getIcon('uniF2C7') + jr.pitmaster.set + '°' + ' / ';
-							var e = ' ' + jr.pitmaster.value + '%';
-							if(jr.pitmaster.value == '0'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan') + ' ' + jr.pitmaster.value + '%';
-							}else if (jr.pitmaster.value <= '25'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-25') + e;
-							}else if (jr.pitmaster.value <= '50'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-50') + e;
-							}else if (jr.pitmaster.value <= '75'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-75') + e;
-							}else if (jr.pitmaster.value <= '100'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-100') + e;
+				try {
+					jr = JSON.parse(response);
+					unit = jr.system.unit;
+					BatteryIcon = getBatteryIcon(jr.system.soc,jr.system.charge);
+					byClass("battery")[0].innerHTML = BatteryIcon;
+					byId('thermoname').innerHTML = timeConverter(jr.system.time);
+					RSSIIcon = getRSSIIcon(jr.system.rssi);
+					byClass("wifi")[0].innerHTML = RSSIIcon;
+					var x = byClass("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
+					var i;
+					for (i = 0; i < x.length; i++) {
+						ch_name[i] = '#' + jr.channel[i].number + ' ' + jr.channel[i].name;
+						x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
+						x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
+						if(jr.pitmaster.typ == 'auto' || jr.pitmaster.typ == 'autotune'){
+							if (jr.pitmaster.channel == jr.channel[i].number){
+								var a = getIcon('uniF2C7') + jr.pitmaster.set + '°' + ' / ';
+								var e = ' ' + jr.pitmaster.value + '%';
+								if(jr.pitmaster.value == '0'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan') + ' ' + jr.pitmaster.value + '%';
+								}else if (jr.pitmaster.value <= '25'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-25') + e;
+								}else if (jr.pitmaster.value <= '50'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-50') + e;
+								}else if (jr.pitmaster.value <= '75'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-75') + e;
+								}else if (jr.pitmaster.value <= '100'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-100') + e;
+								}
+							}else{
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 							}
 						}else{
 							x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 						}
-					}else{
-						x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
-					}
-					x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jr.channel[i].number;
-					x[i].getElementsByClassName('tempmin')[0].innerHTML = getIcon('temp_down') + jr.channel[i].min + "°";
-					x[i].getElementsByClassName('tempmax')[0].innerHTML = getIcon('temp_up') + jr.channel[i].max + "°";
-					if (jr.channel[i].temp == '999'){
-						x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
-						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
-						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
-					}else{
-						x[i].getElementsByClassName('temp')[0].innerHTML = jr.channel[i].temp.toFixed(1) + "°" + jr.system.unit;
-						if (jr.channel[i].temp < jr.channel[i].min){
-							x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
-							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
-						}else if (jr.channel[i].temp > jr.channel[i].max){
-							x[i].getElementsByClassName('temp')[0].style.color = "red";
-							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
-						}else{
-							x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+						x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jr.channel[i].number;
+						x[i].getElementsByClassName('tempmin')[0].innerHTML = getIcon('temp_down') + jr.channel[i].min + "°";
+						x[i].getElementsByClassName('tempmax')[0].innerHTML = getIcon('temp_up') + jr.channel[i].max + "°";
+						if (jr.channel[i].temp == '999'){
+							x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
+							x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
 							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+						}else{
+							x[i].getElementsByClassName('temp')[0].innerHTML = jr.channel[i].temp.toFixed(1) + "°" + jr.system.unit;
+							if (jr.channel[i].temp < jr.channel[i].min){
+								x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
+								x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+							}else if (jr.channel[i].temp > jr.channel[i].max){
+								x[i].getElementsByClassName('temp')[0].style.color = "red";
+								x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+							}else{
+								x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+								x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+							}
 						}
 					}
+					if(chart_ts != jr.system.time && pit_act === true){
+						addData(timeConverter(jr.system.time),jr,true);
+						chart_ts = jr.system.time;
+					}					
+				} catch(e) {
+					alert(e); // error in the above string (in this case, yes)!
 				}
-				if(chart_ts != jr.system.time && pit_act === true){
-					addData(timeConverter(jr.system.time),jr,true);
-					chart_ts = jr.system.time;
-				}
-				
 			})
 		}
 	}
@@ -2384,14 +2387,18 @@ function loadChartData(){
 	loadJSON(api_data_test, '', '10000', function (response_1) {
 		if (response_1 == 'false'){
 			alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
-			window.location = "http://www.wlanthermo.de/";
+			window.location = "http://www.wlanthermo.com/";
 		}
 		var response = response_1.split(";");
 		for (var i = 0; i < response.length -1; i++) {			
-			jr = JSON.parse(response[i]);
-			if(chart_ts != jr.system.time){
-				addData(timeConverter(jr.system.time),jr,false);
-				chart_ts = jr.system.time;
+			try {
+				jr = JSON.parse(response[i]);
+				if(chart_ts != jr.system.time){
+					addData(timeConverter(jr.system.time),jr,false);
+					chart_ts = jr.system.time;
+				}
+			} catch(e) {
+				alert(e); // error in the above string (in this case, yes)!
 			}	
 		}
 		pit_act = true;

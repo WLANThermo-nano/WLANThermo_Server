@@ -94,22 +94,25 @@ function getHistory($dbh,$api_token,$api_time){
 		if ($statement->rowCount() > 0) {
 		    $data = '';
 			foreach($statement as $daten) {
-
 				$obj = json_decode( $daten['data'], true );
-				$arr = array(); 
-				$arr['system']['time'] = $obj['system']['time'];
-				$arr['system']['soc'] = $obj['system']['soc'];
-				foreach ( $obj['channel'] as $key => $value )
-				{
-					$arr['channel'][$key]['temp'] = $value['temp'];
-				}
-				$arr['pitmaster']['value'] = $obj['pitmaster']['value'];
-				$arr['pitmaster']['set'] = $obj['pitmaster']['set'];
-				$arr['pitmaster']['typ'] = $obj['pitmaster']['typ'];
-				$history = json_encode($arr);
+				if ($obj === null && json_last_error() !== JSON_ERROR_NONE) {
+					//ToDo Error Hadling
+				}else{
+					$arr = array(); 
+					$arr['system']['time'] = $obj['system']['time'];
+					$arr['system']['soc'] = $obj['system']['soc'];
+					foreach ( $obj['channel'] as $key => $value )
+					{
+						$arr['channel'][$key]['temp'] = $value['temp'];
+					}
+					$arr['pitmaster']['value'] = $obj['pitmaster']['value'];
+					$arr['pitmaster']['set'] = $obj['pitmaster']['set'];
+					$arr['pitmaster']['typ'] = $obj['pitmaster']['typ'];
+					$history = json_encode($arr);
 
-				$data .= $history;
-				$data .= ';';
+					$data .= $history;
+					$data .= ';';
+				}
 			}
 			return substr($data, 0, -1);
 		} else {
