@@ -176,6 +176,9 @@ function checkUpdate($dbh,$device,$serial,$sw_version){
 				$db_version = $statement->fetchAll();
 				if (version_compare($db_version['0']['software_version'], $sw_version, ">")) {
 					SimpleLogger::info("A new software version is available - '".$db_version['0']['software_version']."' \n");
+					header('Content-type: text/html; charset=utf-8');
+					header("Content-Length: ".strlen($db_version['0']['software_version']));
+					header_remove("Connection: close");
 					echo $db_version['0']['software_version'];
 					die();
 				}else{
