@@ -1989,6 +1989,7 @@
 	var byId = function( id ) { return document.getElementById( id ); };
 	var byClass = function( id ) { return document.getElementsByClassName( id ); };
 	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
+	byId('index').style.display = "inline";									
 	(function (window, document) {
 
 		var byId = function( id ) { return document.getElementById( id ); };
@@ -2163,6 +2164,7 @@
 					byClass("wifi")[0].innerHTML = RSSIIcon;
 					var x = byClass("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
 					var i;
+					var ch_count = 0;
 					for (i = 0; i < x.length; i++) {
 						ch_name[i] = '#' + jr.channel[i].number + ' ' + jr.channel[i].name;
 						x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
@@ -2192,10 +2194,13 @@
 						x[i].getElementsByClassName('tempmin')[0].innerHTML = getIcon('temp_down') + jr.channel[i].min + "°";
 						x[i].getElementsByClassName('tempmax')[0].innerHTML = getIcon('temp_up') + jr.channel[i].max + "°";
 						if (jr.channel[i].temp == '999'){
+							x[i].style.display = 'none';	  
 							x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
 							x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
 							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
 						}else{
+							ch_count++;
+							x[i].style.display = 'inline';							
 							x[i].getElementsByClassName('temp')[0].innerHTML = jr.channel[i].temp.toFixed(1) + "°" + jr.system.unit;
 							if (jr.channel[i].temp < jr.channel[i].min){
 								x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
@@ -2212,9 +2217,15 @@
 					if(chart_ts != jr.system.time && pit_act === true){
 						addData(timeConverter(jr.system.time),jr,true);
 						chart_ts = jr.system.time;
+					}
+					if (ch_count == 0){
+						for (i = 0; i < x.length; i++) {
+							x[i].style.display = 'inline';
+						}
+																
 					}					
 				} catch(e) {
-					alert(e + 'Hallo'); // error in the above string (in this case, yes)!
+					//alert(e); // error in the above string (in this case, yes)!
 				}
 			})
 		}
