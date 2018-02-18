@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-$logfile = '_update.log'; // global var for logger class filename
+$logfile = '_device.log'; // global var for logger class filename
 $logpath = '../logs/';  // global var for logger class filepath
 require_once("../include/logger.php");
 require_once("../../config.inc.php");
