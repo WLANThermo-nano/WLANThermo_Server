@@ -1,0 +1,105 @@
+{
+	"system": {
+		"time": "1515243216",
+		"soc": 68,
+		"charge": true,
+		"rssi": -84,
+		"unit": "C"
+	},
+	"channel": [{
+		"number": 1,
+		"name": "Kanal 1",
+		"typ": 3,
+		"temp": 22.10,
+		"min": 10.00,
+		"max": 80.00,
+		"alarm": 0,
+		"color": "#0C4C88"
+	},
+	{
+		"number": 2,
+		"name": "Kanal 2",
+		"typ": 0,
+		"temp": 134.90,
+		"min": 10.00,
+		"max": 35.00,
+		"alarm": 1,
+		"color": "#22B14C"
+	},
+	{
+		"number": 3,
+		"name": "Kanal 3",
+		"typ": 0,
+		"temp": 999.00,
+		"min": 10.00,
+		"max": 35.00,
+		"alarm": 2,
+		"color": "#EF562D"
+	},
+	{
+		"number": 4,
+		"name": "Kanal 4",
+		"typ": 0,
+		"temp": 999.00,
+		"min": 10.00,
+		"max": 35.00,
+		"alarm": 3,
+		"color": "#FFC100"
+	},
+	{
+		"number": 5,
+		"name": "Kanal 5",
+		"typ": 0,
+		"temp": 999.00,
+		"min": 10.00,
+		"max": 35.00,
+		"alarm": 0,
+		"color": "#A349A4"
+	},
+	{
+		"number": 6,
+		"name": "Kanal 6",
+		"typ": 0,
+		"temp": 999.00,
+		"min": 10.00,
+		"max": 35.00,
+		"alarm": 1,
+		"color": "#804000"
+	},
+	{
+		"number": 7,
+		"name": "Kanal 7",
+		"typ": 3,
+		"temp": 999.00,
+		"min": 150.00,
+		"max": 180.00,
+		"alarm": 2,
+		"color": "#5587A2"
+	},
+	{
+		"number": 8,
+		"name": "Kanal 8",
+		"typ": 0,
+		"temp": 999.00,
+		"min": 10.00,
+		"max": 35.00,
+		"alarm": 3,
+		"color": "#5C7148"
+	}],
+	"pitmaster": [{
+		"id": 0,
+		"channel": 1,
+		"pid": 0,
+		"value": 0,
+		"set": 0.00,
+		"typ": "off"
+	},
+	{
+		"id": 1,
+		"channel": 1,
+		"pid": 0,
+		"value": 0,
+		"set": 0.00,
+		"typ": "off"
+	}]
+}
