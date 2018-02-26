@@ -2,6 +2,7 @@
 error_reporting(E_ALL);
 $logfile = '_update.log'; // global var for logger class filename
 $logpath = 'html/logs/';  // global var for logger class filepath
+$device = "nano";
 require_once("html/include/logger.php");
 require_once("/var/www/virtual/nano/config.inc.php");
 /* @author Florian Riedl
@@ -124,9 +125,10 @@ function searchsw_versions($dbh){
 
 function insertVersion($dbh,$software_version,$software_id,$prerelease,$firmware_url,$spiffs_url,$firmware_bin,$spiffs_bin){
 	try {
-		$sql = "INSERT INTO `sw_versions` (`software_version`, `software_id`, `prerelease`, `firmware_url`, `spiffs_url`, `firmware_bin`, `spiffs_bin`, `ts_insert`) VALUES (:software_version, :software_id, :prerelease, :firmware_url, :spiffs_url, :firmware_bin, :spiffs_bin, :ts_insert)";
+		$sql = "INSERT INTO `sw_versions` (`software_version`, `device`, `software_id`, `prerelease`, `firmware_url`, `spiffs_url`, `firmware_bin`, `spiffs_bin`, `ts_insert`) VALUES (:software_version, :device, :software_id, :prerelease, :firmware_url, :spiffs_url, :firmware_bin, :spiffs_bin, :ts_insert)";
 		$statement = $dbh->prepare($sql);
 		$statement->bindValue(':software_version', $software_version);
+		$statement->bindValue(':device', $device);
 		$statement->bindValue(':software_id', $software_id);
 		$statement->bindValue(':prerelease', $prerelease);
 		$statement->bindValue(':firmware_url', $firmware_url);
