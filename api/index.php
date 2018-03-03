@@ -25,6 +25,11 @@ $test = '{
 	"update": {
 		"available": true
 	},
+	"cloud": {
+		"task": "save",
+		"api_token": "blablabla",
+		"data":[] 
+	},
 	"url":{
 		"api": {
 			"host": "api.wlanthermo.de",
@@ -56,17 +61,18 @@ $test = '{
 
 $json = file_get_contents('php://input');
 $JsonArr = array();
-$JsonArr = json_decode( $test, true );
-//$JsonArr = json_decode( $json, true );
+//$JsonArr = json_decode( $test, true );
+$JsonArr = json_decode( $json, true );
 if ($JsonArr === null && json_last_error() !== JSON_ERROR_NONE) {
-    SimpleLogger::error("JSON invalide ".$json."\n");
+    SimpleLogger::error("JSON invalide\n");
+	SimpleLogger::debug("".$json."\n");
 	die(false);
 }
 
 //-----------------------------------------------------------------------------
 // main 
 
-if(checkDeviceJson($JsonArr) === true){
+if(checkDeviceJson($JsonArr)){
 	// Connecting to database
 	try {
 		$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
@@ -83,8 +89,8 @@ if(checkDeviceJson($JsonArr) === true){
 			case 'update':	
 				$JsonArr = createUpdateJson($dbh,$JsonArr);
 				break;
-			case 'url':
-				//echo "Url on Json";
+			case 'cloud':
+				$JsonArr = createCloudJson($dbh,$JsonArr);
 				break;
 		}
 	}
@@ -93,7 +99,8 @@ if(checkDeviceJson($JsonArr) === true){
 	header("Content-Length: ".strlen($json));
 	echo $json;	
 }else{
-	SimpleLogger::error("(checkDeviceJson) JSON device bad - ".$json."\n");
+	SimpleLogger::error("(checkDeviceJson) JSON device bad\n");
+	SimpleLogger::debug("".$json."\n");
 	die(false);
 }
 
@@ -108,29 +115,75 @@ function checkDeviceJson($JsonArr){
 }
 
 function createUpdateJson($dbh,$JsonArr){
-	if(checkDeviceDatabase($dbh,$JsonArr) === true){
+	if(checkDeviceDatabase($dbh,$JsonArr)){
 		$newVersion = checkNewUpdate($dbh,$JsonArr);
 		if ($newVersion != 'false'){
 			$JsonArr['update']['available'] = 'true';
 			$JsonArr['update']['version'] = $newVersion;
-			// if($newVersion['0']['prerelease'] = '1'){
-				// $JsonArr['update']['prerelease'] = 'true';
-			// }else{
-				// $JsonArr['update']['prerelease'] = 'false';
-			// }
-			$JsonArr['update']['firmwareUrl'] = 'http://update.wlanthermo.de/getFirmware.php?device='.$JsonArr['device']['device'].'&serial='.$JsonArr['device']['serial'].'&version='.$JsonArr['update']['version'].'';
-			$JsonArr['update']['spiffsUrl'] = 'http://update.wlanthermo.de/getSpiffs.php?device='.$JsonArr['device']['device'].'&serial='.$JsonArr['device']['serial'].'&version='.$JsonArr['update']['version'].'';
-			SimpleLogger::debug("createUpdateJson True\n");
+			$JsonArr['update']['firmware']['url'] = 'http://update.wlanthermo.de/getFirmware.php?device='.$JsonArr['device']['device'].'&serial='.$JsonArr['device']['serial'].'&version='.$JsonArr['update']['version'].'';
+			$JsonArr['update']['spiffs']['url'] = 'http://update.wlanthermo.de/getSpiffs.php?device='.$JsonArr['device']['device'].'&serial='.$JsonArr['device']['serial'].'&version='.$JsonArr['update']['version'].'';
 			return $JsonArr;
 		}else{
 			$JsonArr['update']['available'] = 'false';
-			SimpleLogger::debug("createUpdateJson False\n");
 			return $JsonArr;
 		}
 	}else{
-		SimpleLogger::error("(checkDeviceDatabase) insert device error\n");
+		SimpleLogger::error("An error has occurred - (createUpdateJson)\n");
 		die(false);		
 	}	
+}
+
+function createCloudJson($dbh,$JsonArr){
+	if(checkCloudJson){
+		switch ($JsonArr['cloud']['task']) {
+			case 'save':
+				if (isset($JsonArr['cloud']['data']) AND !empty($JsonArr['cloud']['data'])){
+					$JsonArr = insertCloudData($dbh,$JsonArr);
+				}else{
+					$JsonArr['cloud']['task'] = 'false';
+				}
+				break;
+			case 'read':
+				// todo
+				break;		
+		}
+	}else{
+		$JsonArr['cloud']['task'] = 'false';	
+		SimpleLogger::debug("Json false - ".json_encode($JsonArr['cloud'], JSON_UNESCAPED_SLASHES)."(createUpdateJson)\n");
+	}
+	return $JsonArr;
+}
+
+function checkCloudJson($dbh,$JsonArr){
+	if (isset($JsonArr['cloud']['task']) AND !empty($JsonArr['cloud']['task']) AND isset($JsonArr['cloud']['api_token']) AND !empty($JsonArr['cloud']['api_token'])){
+		return(true);
+	}else{
+		return(false);
+	}
+}
+
+function insertCloudData($dbh,$JsonArr){	
+	try {
+		$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`) VALUES (:serial, :api_token, :data)";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':serial', $JsonArr['device']['serial']);
+		$statement->bindValue(':api_token', $JsonArr['cloud']['api_token']);
+		foreach($JsonArr['cloud']['data'] as $key => $data){			
+			$statement->bindValue(':data', json_encode($data, JSON_UNESCAPED_SLASHES));
+			$statement->execute();
+		}		
+		$statement->close();
+		$JsonArr['cloud']['task'] = "true";
+		unset($JsonArr['cloud']['data']);
+		return $JsonArr;
+	} catch (PDOException $e) {
+		$statement->close();
+		SimpleLogger::error("An error has occurred - (insertDevice)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		$JsonArr['cloud']['task'] = "false";
+		unset($JsonArr['cloud']['data']);
+		return $JsonArr;
+	}		
 }
 
 function checkDeviceDatabase($dbh,$JsonArr){
@@ -154,7 +207,7 @@ function checkDeviceDatabase($dbh,$JsonArr){
 		}
 		$statement = null;
 	} catch (PDOException $e) {
-		SimpleLogger::error("An error has occurred - (insertDevice)\n");
+		SimpleLogger::error("An error has occurred - (checkDeviceDatabase)\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		die('false');
 	}
@@ -179,15 +232,15 @@ function checkNewUpdate($dbh,$JsonArr){
 		  return('false');
 		}
 	} catch (PDOException $e) {
-		SimpleLogger::error("An error has occurred - (searchDevice)\n");
+		SimpleLogger::error("An error has occurred - (checkNewUpdate)\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		return('false');
 	}	
 }
 
-function compareVersion($newVersion, $oldVersion){
-	if (version_compare($newVersion, $oldVersion, ">")) {
-		return $newVersion;
+function compareVersion($dbVersion, $deviceVersion){
+	if (version_compare($dbVersion, $deviceVersion, ">")) {
+		return $dbVersion;
 	}else{
 		return('false');
 	}
