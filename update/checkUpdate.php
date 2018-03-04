@@ -21,6 +21,8 @@ SimpleLogger::info("############################################################
  * ---------------------------------------------------------------------------------------------------------------------------------------- 
  */	
 
+$missing_device = array("84d940", "851b3b"); 
+ 
 if (isset($_GET['device']) AND !empty($_GET['device']) AND isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['hw_version']) AND !empty($_GET['hw_version']) AND isset($_GET['sw_version']) AND !empty($_GET['sw_version'])){
 	SimpleLogger::info("Device ".$_GET['device']."/".$_GET['serial']." is looking for an update...\n");
 	//Connecting to database
@@ -33,6 +35,10 @@ if (isset($_GET['device']) AND !empty($_GET['device']) AND isset($_GET['serial']
 		SimpleLogger::error("An error has occurred\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		die('false');
+	}
+	
+	if(in_array($_GET['serial'],$missing_device)) {
+		notificationEmail($_GET['serial']);
 	}
 	
 	$result = searchDevice($dbh,strval($_GET['serial'])); // Look for Device into Database		
@@ -250,6 +256,18 @@ function insertDevice($dbh,$device,$serial,$name,$hardware_version,$software_ver
 	}		
 }
 
+function notificationEmail($serial){
+	$ip = getenv ("REMOTE_ADDR");
+	$empfaenger_email = 's.ochs.mail@web.de,flo.riedl@gmx.at';  
+	$betreff = 'ACHTUNG! Verschwundenes Device aufgetaucht';
+	$nachricht = 'Hallo Steffen, folgendes Device - '.$serial.' hat sich am Server angemeldet.';
+	$nachricht .= 'IP Adresse:'.$ip.'';
+	$email_header = 'From: "WLANThermo Alert" <info@wlanthermo.de>' . "\r\n" .
+					'Reply-To: info@wlanthermo.de' . "\r\n" .
+					'X-Mailer: PHP/' . phpversion();
+
+	mail($empfaenger_email, $betreff, $nachricht, $email_header);
+}
 ?>
 
 
