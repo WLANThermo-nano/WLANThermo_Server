@@ -1,8 +1,41 @@
 <?php
-/* @author Florian Riedl */
-error_reporting(E_ALL);
+ /*************************************************** 
+    Copyright (C) 2018  Florian Riedl
+    ***************************
+		@author Florian Riedl
+		@version 0.2, 30/04/18
+	***************************
+	This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
+    HISTORY: Please refer Github History
+    
+ ****************************************************/
+ 
+//-----------------------------------------------------------------------------
+// error reporting
+ error_reporting(E_ALL); 
+//-----------------------------------------------------------------------------
+// start runtome counter
+ $time_start = microtime(true);
+//-----------------------------------------------------------------------------
+// include Logging libary 
+$logfile = '_message.log'; // global var for logger class filename
+$logpath = '../logs/';  // global var for logger class filepath
+require_once("../include/logger.php"); // logger class
+//-----------------------------------------------------------------------------
 
-// message.php?serial=54gfdgf&token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc&chatID=399660681&ch=0&msg=up&lang=de&service=pushover
+// message.php?serial=54gfdgf&token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc&chatID=399660681&ch=0&msg=up&lang=de&service=telegram
+// message.php?serial=54gfdgf&token=am7hrgkizhxbz89411y17kzo5w59ii&chatID=uxg4kym3shnhwjnz3ft5min2cw4osp&ch=0&msg=up&lang=de&service=pushover
+
 if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['token']) AND !empty($_GET['token']) AND isset($_GET['chatID']) AND !empty($_GET['chatID']) AND isset($_GET['ch']) AND isset($_GET['msg']) AND !empty($_GET['msg']) AND isset($_GET['lang']) AND !empty($_GET['lang']) AND isset($_GET['service']) AND !empty($_GET['service'])){
 	switch ($_GET['service']) {
     case telegram:
@@ -15,10 +48,6 @@ if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['token'])
 }else{
 	die('false');
 }
-
-
-//sendTelegram('344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc','399660681',getMsg('0','up','de'));
-//echo getMsg('0','up','de');
 
 function getMsg($ch,$msg,$lang){
 $de = array("msg0" => "ACHTUNG!","msg1" => "Kanal","msg2" => "hat","up" => "Übertemperatur","down" => "Untertemperatur");
@@ -44,9 +73,9 @@ function sendTelegram($token,$chatID,$msg){
 	$result = json_decode(file_get_contents($url));
 	//var_dump($result);
 	if($result->ok === true){
-		SimpleLogger::info("Message has been sent! - device(".$_GET['serial'].") \n");
+		SimpleLogger::info("Message has been sent! (pushover) - device(".$_GET['serial'].") \n");
 	}else{
-		SimpleLogger::error("Message could not be sent! - device(".$_GET['serial'].") \n");
+		SimpleLogger::error("Message could not be sent! (pushover) - device(".$_GET['serial'].") \n");
 		SimpleLogger::debug(json_encode($result) . "\n");		
 	}
 }
@@ -62,282 +91,18 @@ function sendPushover($token,$chatID,$msg){
 	  CURLOPT_SAFE_UPLOAD => true,
 	  CURLOPT_RETURNTRANSFER => true,
 	));
-	curl_exec($ch);
+	$result = curl_exec($ch);
+	$json_result = json_decode( $result, true );
+	if($json_result['status'] == 1){
+		SimpleLogger::info("Message has been sent! (pushover) - device(".$_GET['serial'].") \n");
+	}else{
+		SimpleLogger::error("Message could not be sent! (pushover) - device(".$_GET['serial'].") \n");
+		SimpleLogger::debug($result . "\n");
+	}
+	//{"status":1,"request":"2f095aee-9c80-4c7b-987b-688399bde2d7"}
+	//{"token":"invalid","errors":["application token is invalid"],"status":0,"request":"b735dbd0-49ca-4dde-9705-8be42f8e973c"}
+	//{"user":"invalid","errors":["user identifier is not a valid user, group, or subscribed user key"],"status":0,"request":"6956bca9-0637-447e-a9ab-d53f18f8c4f0"}
+	echo $test;
 	curl_close($ch);
-
-
-	// $url = 'https://api.pushover.net/1/messages.json';
-	// $ch = curl_init($url); // cURL ínitialisieren
-	// curl_setopt($ch, CURLOPT_HEADER, 0); // Header soll nicht in Ausgabe enthalten sein
-	// curl_setopt($ch, CURLOPT_POST, 1); // POST-Request wird abgesetzt
-	// curl_setopt($ch, CURLOPT_POSTFIELDS, 'token=' . $token . '&user= '.$chatID.' &message="'.$msg.'"'); // POST-Felder festlegen, die gesendet werden sollen
-	// curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	// curl_exec($ch); // Ausführen
-	// curl_close($ch); // Objekt schließen und Ressourcen freigeben
 }
-
-// Needed by strftime() => error message otherwise
-date_default_timezone_set ( 'Europe/Berlin' );
- 
-/**
- * A simple logging class
- *
- * - uses file access to log any message such as debug, info, error,
- * fatal or an exception including stacktrace
- *
- * @author saftmeister
- */
-class SimpleLogger
-{
-  const DEBUG = 1;
-  const INFO = 2;
-  const NOTICE = 4;
-  const WARNING = 8;
-  const ERROR = 16;
-  const CRITICAL = 32;
-  const ALERT = 64;
-  const EMERGENCY = 128;
- 
-  /**
-   * Path to log file
-   *
-   * @var string
-   */
-  private static $filePath = 'logs/sendTelegram.log';
-  //private static $filePath = 'html/logs/strftime'.("%Y%m%d").'searchUpdate.log';	 
-  /**
-   * Log file size in MB
-   *
-   * @var number
-   */
-  private static $maxLogSize = 2;
- 
-  /**
-   * Logs a particular message using a given log level
-   *
-   * @param number $level
-   *          The level of error the message is
-   * @param string $message
-   *          Either a format or a constant
-   *          string which represents the message to log.
-   */
-  public static function log($level, $message /*,...*/)
-  {
-	clearstatcache ();
-	$filePath = 'logs/'.strftime("%Y-%m-%d").'_sendTelegram.log';
-	if (! is_int ( $level ))
-	{
-	  $message = $level;
-	  $level = self::DEBUG;
-	}
-	else if ($level != self::DEBUG && $level != self::INFO && $level != self::NOTICE &&
-		$level != self::WARNING && $level != self::ERROR && $level != self::CRITICAL &&
-		$level != self::ALERT && $level != self::EMERGENCY)
-	{
-	  $level = self::ERROR;
-	}
-	$mode = "a";
-	if (! file_exists ( $filePath ))
-	{
-	  $mode = "w";
-	}
-	else
-	{
-	  $attributes = stat ( $filePath );
-	  if ($attributes == false || $attributes ['size'] >= self::$maxLogSize * 1024 * 1024)
-	  {
-		$mode = "w";
-	  }
-	}
-   
-	$levelStr = "FATAL";
-	switch ($level)
-	{
-	  case self::DEBUG:    $levelStr = "DEBUG"; break;
-	  case self::INFO:     $levelStr = "INFO "; break;
-	  case self::NOTICE:   $levelStr = "NOTIC"; break;
-	  case self::WARNING:  $levelStr = "WARN "; break;
-	  case self::ERROR:    $levelStr = "ERROR"; break;
-	  case self::CRITICAL: $levelStr = "CRIT "; break;
-	  case self::ALERT:    $levelStr = "ALERT"; break;
-	  case self::EMERGENCY:$levelStr = "EMERG"; break;
-	}
-	$filePath = 'logs/'.strftime("%Y-%m-%d").'_sendTelegram.log';
-	$fd = fopen ( $filePath, $mode );
-	if ($fd)
-	{
-	  $arguments = func_get_args ();
-	  if (count ( $arguments ) > 2)
-	  {
-		$format = $arguments [1];
-		array_shift ( $arguments ); // Do not need the level
-		array_shift ( $arguments ); // Do not need the format as argument
-		$message = vsprintf ( $format, $arguments );
-	  }
-	  $time = strftime ( "%Y-%m-%d %H:%M:%S", time () );
-	  fprintf ( $fd, "%s\t[%s]: %s", $time, $levelStr, $message );
-	  fflush ( $fd );
-	  fclose ( $fd );
-	}
-  }
- 
-  /**
-   * Simple wrapper arround log method for alert level
-   *
-   * @param string $message          
-   * @see SimpleLogger::log()
-   */
-  public static function alert($message)
-  {
-	self::log ( self::ALERT, $message );
-  }
- 
-  /**
-   * Simple wrapper arround log method for critical level
-   *
-   * @param string $message
-   * @see SimpleLogger::log()
-   */
-  public static function crit($message)
-  {
-	self::log ( self::CRITICAL, $message );
-  }
- 
-  /**
-   * Simple wrapper arround log method for debug level
-   *
-   * @param string $message          
-   * @see SimpleLogger::log()
-   */
-  public static function debug($message)
-  {
-	self::log ( self::DEBUG, $message );
-  }
- 
-  /**
-   * Simple wrapper arround log method for emergency level
-   *
-   * @param string $message          
-   * @see SimpleLogger::log()
-   */
-  public static function emerg($message)
-  {
-	self::log ( self::EMERGENCY, $message );
-  }
- 
-  /**
-   * Simple wrapper arround log method for info level
-   *
-   * @param string $message          
-   * @see SimpleLogger::log()
-   */
-  public static function info($message)
-  {
-	self::log ( self::INFO, $message );
-  }
- 
-  /**
-   * Simple wrapper arround log method for notice level
-   *
-   * @param string $message          
-   * @see SimpleLogger::log()
-   */
-  public static function notice($message)
-  {
-	self::log ( self::NOTICE, $message );
-  }
- 
-  /**
-   * Simple wrapper arround log method for error level
-   *
-   * @param string $message          
-   * @see SimpleLogger::log()
-   */
-  public static function error($message)
-  {
-	self::log ( self::ERROR, $message );
-  }
- 
-  /**
-   * Simple wrapper arround log method for notice level
-   *
-   * @param string $message
-   * @see SimpleLogger::log()
-   */
-  public static function warn($message)
-  {
-	self::log ( self::WARNING, $message );
-  }
- 
- 
-  /**
-   * Log a particular exception
-   *
-   * @param Exception $ex
-   *          The exception to log
-   */
-  public static function logException(Exception $ex)
-  {
-	$level = self::ERROR;
-	if ($ex instanceof RuntimeException)
-	{
-	  $level = self::ALERT;
-	}
-   
-	self::log ( $level, "Exception %s occured: %s\n%s\n", get_class ( $ex ), $ex->getMessage (), $ex->getTraceAsString () );
-   
-	if ($ex->getPrevious () && $ex->getPrevious () instanceof Exception)
-	{
-	  self::log ( $level, "Caused by:\n" );
-	  self::logException ( $ex->getPrevious () );
-	}
-  }
- 
-  /**
-   * Dump a particular object and write it to log file
-   *
-   * @param mixed $o
-   */
-  public static function dump($o)
-  {
-	$out = var_export ( $o, true );
-	self::debug ( sprintf ( "Contents of %s\n%s\n", gettype ( $o ), $out ) );
-  }
-}
-// $bot_id = "344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc";
-
-// if (isset($_GET['token'])){
- 	
- # Note: you want to change the offset based on the last update_id you received
-// $ch = curl_init();
-// // Disable SSL verification
-// curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-// // Will return the response, if false it print the response
-// curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-// // Set the url
-// curl_setopt($ch, CURLOPT_URL, $url);
-// //curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-// //curl_setopt($ch, CURLOPT_USERPWD, "$usernamearray[$usernamekey]:$passwd");
-// curl_setopt($ch, CURLOPT_HTTPHEADER, array('User-Agent: ESP8285'));
-// // Execute
-// $result = curl_exec($ch);
-// echo $result;
-// }else{
-	// echo 'false';
-	
-// }
-
-
-
-//$result = json_decode($result, true);
-
-// foreach ($result['result'] as $message) {
-    // var_dump($message);
-// }
-
-
-// # The chat_id variable will be provided in the getUpdates result
-
-// $result = json_decode($result, true);
-
-// var_dump($result['result']);
+?>
