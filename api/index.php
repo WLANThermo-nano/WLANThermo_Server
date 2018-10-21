@@ -1,10 +1,31 @@
 <?php
-error_reporting(E_ALL);
-
-/* @author Florian Riedl
- * @version 0.2, 26/02/18 
- */	
+ /*************************************************** 
+    Copyright (C) 2018  Florian Riedl
+    ***************************
+		@author Florian Riedl
+		@version 0.2, 26/02/18
+	***************************
+	This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
+    HISTORY: Please refer Github History
+    
+ ****************************************************/
  
+//-----------------------------------------------------------------------------
+// error reporting
+ error_reporting(E_ALL); 
+//-----------------------------------------------------------------------------
+// start runtome counter
+ $time_start = microtime(true);
 //-----------------------------------------------------------------------------
 // include Logging libary 
 $logfile = '_api.log'; // global var for logger class filename
@@ -14,7 +35,7 @@ require_once("../include/logger.php"); // logger class
 // include database config
 require_once("../../config.inc.php"); // 
 //-----------------------------------------------------------------------------
-// read $_POST data
+// test JSON
 $test = '{
 	"device": {
 		"device": "nano",
@@ -29,6 +50,24 @@ $test = '{
 		"task": "save",
 		"api_token": "blablabla",
 		"data":[] 
+	},	
+	"notification": {
+		"task": "alert",
+		"channel": 1,
+		"message": "up",
+		"lang": "de",
+		"services": [{
+			"service": "telegram",
+			"key1": "xxx",
+			"key2": "xxx"
+		},{
+			"service": "pushover",
+			"key1": "xxx",
+			"key2": "xxx"
+		},{
+			"service": "mail",
+			"adress": "xxx"
+		}]
 	},
 	"url":{
 		"api": {
@@ -58,17 +97,19 @@ $test = '{
 	}
 }';
 
-
+//-----------------------------------------------------------------------------
+// read post data
 $json = file_get_contents('php://input');
+// define json array
 $JsonArr = array();
-//$JsonArr = json_decode( $test, true );
+// decode post data to json
 $JsonArr = json_decode( $json, true );
+// check json error
 if ($JsonArr === null && json_last_error() !== JSON_ERROR_NONE) {
     SimpleLogger::error("JSON invalide\n");
 	SimpleLogger::debug("".$json."\n");
 	die(false);
 }
-
 //-----------------------------------------------------------------------------
 // main 
 
@@ -92,8 +133,15 @@ if(checkDeviceJson($JsonArr)){
 			case 'cloud':
 				$JsonArr = createCloudJson($dbh,$JsonArr);
 				break;
+			case 'notification':
+				$JsonArr = createNotificationJson($JsonArr);
+				break;
+			case 'alexa':
+				$JsonArr = createAlexaJson($dbh,$JsonArr);
+				break;
 		}
 	}
+	$JsonArr['runtime'] = (microtime(true) - $time_start);
 	$json = json_encode($JsonArr, JSON_UNESCAPED_SLASHES);	
 	header('Content-Type: application/json');
 	header("Content-Length: ".strlen($json));
@@ -104,13 +152,14 @@ if(checkDeviceJson($JsonArr)){
 	die(false);
 }
 
+//-----------------------------------------------------------------------------
+// WLANThermo API functions
 
-// function
 function checkDeviceJson($JsonArr){
 	if (isset($JsonArr['device']['device']) AND !empty($JsonArr['device']['device']) AND isset($JsonArr['device']['serial']) AND !empty($JsonArr['device']['serial']) AND isset($JsonArr['device']['hw_version']) AND !empty($JsonArr['device']['hw_version']) AND isset($JsonArr['device']['sw_version']) AND !empty($JsonArr['device']['sw_version'])){
-		return(true);
+		return true;
 	}else{
-		return(false);
+		return false;
 	}
 }
 
@@ -137,10 +186,12 @@ function createCloudJson($dbh,$JsonArr){
 	if(checkCloudJson){
 		switch ($JsonArr['cloud']['task']) {
 			case 'save':
-				if (isset($JsonArr['cloud']['data']) AND !empty($JsonArr['cloud']['data'])){
-					$JsonArr = insertCloudData($dbh,$JsonArr);
+				if (insertCloudData($dbh,$JsonArr)){
+					$JsonArr['cloud']['task'] = 'true';
+					unset($JsonArr['cloud']['data']);
 				}else{
 					$JsonArr['cloud']['task'] = 'false';
+					unset($JsonArr['cloud']['data']);
 				}
 				break;
 			case 'read':
@@ -156,34 +207,40 @@ function createCloudJson($dbh,$JsonArr){
 
 function checkCloudJson($dbh,$JsonArr){
 	if (isset($JsonArr['cloud']['task']) AND !empty($JsonArr['cloud']['task']) AND isset($JsonArr['cloud']['api_token']) AND !empty($JsonArr['cloud']['api_token'])){
-		return(true);
+		return true;
 	}else{
-		return(false);
+		return false;
 	}
 }
-
+	
+function checkNotificationJson($dbh,$JsonArr){
+	if (isset($JsonArr['notification']['task']) AND !empty($JsonArr['notification']['task'])){
+		return true;
+	}else{
+		return false;
+	}
+}
+		
 function insertCloudData($dbh,$JsonArr){	
-	try {
-		$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`) VALUES (:serial, :api_token, :data)";
-		$statement = $dbh->prepare($sql);
-		$statement->bindValue(':serial', $JsonArr['device']['serial']);
-		$statement->bindValue(':api_token', $JsonArr['cloud']['api_token']);
-		foreach($JsonArr['cloud']['data'] as $key => $data){			
-			$statement->bindValue(':data', json_encode($data, JSON_UNESCAPED_SLASHES));
-			$statement->execute();
-		}		
-		$statement->close();
-		$JsonArr['cloud']['task'] = "true";
-		unset($JsonArr['cloud']['data']);
-		return $JsonArr;
-	} catch (PDOException $e) {
-		$statement->close();
-		SimpleLogger::error("An error has occurred - (insertDevice)\n");
-		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
-		$JsonArr['cloud']['task'] = "false";
-		unset($JsonArr['cloud']['data']);
-		return $JsonArr;
-	}		
+	if (isset($JsonArr['cloud']['data']) AND !empty($JsonArr['cloud']['data'])){
+		try {
+			$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`) VALUES (:serial, :api_token, :data)";
+			$statement = $dbh->prepare($sql);
+			$statement->bindValue(':serial', $JsonArr['device']['serial']);
+			$statement->bindValue(':api_token', $JsonArr['cloud']['api_token']);
+			foreach($JsonArr['cloud']['data'] as $key => $data){			
+				$statement->bindValue(':data', json_encode($data, JSON_UNESCAPED_SLASHES));
+				$statement->execute();
+			}		
+			return true;
+		} catch (PDOException $e) {
+			SimpleLogger::error("An error has occurred - (insertDevice)\n");
+			SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+			return false;
+		}
+	}else{
+		return false;
+	}
 }
 
 function checkDeviceDatabase($dbh,$JsonArr){
@@ -237,12 +294,138 @@ function checkNewUpdate($dbh,$JsonArr){
 		return('false');
 	}	
 }
-
+//-----------------------------------------------------------------------------
+// compare version numbers
 function compareVersion($dbVersion, $deviceVersion){
 	if (version_compare($dbVersion, $deviceVersion, ">")) {
 		return $dbVersion;
 	}else{
 		return('false');
 	}
+}
+
+function createAlexaJson($dbh,$JsonArr){
+	if(checkAlexaJson($JsonArr)){
+		switch ($JsonArr['alexa']['task']) {
+			case 'save':
+				if (insertAlexaKey($dbh,$JsonArr)){
+					$JsonArr['alexa']['task'] = 'true';
+				}else{
+					$JsonArr['alexa']['task'] = 'false';
+				}
+				break;
+			case 'delete':
+				$JsonArr['alexa']['token'] = NULL;
+				if (insertAlexaKey($dbh,$JsonArr)){
+					$JsonArr['alexa']['task'] = 'true';
+				}else{
+					$JsonArr['alexa']['task'] = 'false';
+				}
+				unset($JsonArr['alexa']['token']);
+				break;				
+		}
+	}else{
+		$JsonArr['alexa']['task'] = 'false';	
+		SimpleLogger::debug("Json false - ".json_encode($JsonArr['alexa'], JSON_UNESCAPED_SLASHES)."(createAlexaJson)\n");
+	}
+	return $JsonArr;	
+}
+
+function checkAlexaJson($JsonArr){
+	if (isset($JsonArr['alexa']['task']) AND !empty($JsonArr['alexa']['task'])){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+function insertAlexaKey($dbh,$JsonArr){
+	try {			
+		$sql = "UPDATE `devices` 
+				SET `amazon_token` = :token 
+				WHERE `serial` = :serial";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':serial', $JsonArr['device']['serial']);
+		$statement->bindValue(':token', $JsonArr['alexa']['token']);
+		$statement->execute();			
+		return true;
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (insertAlexaKey)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		return false;
+	}
+}
+
+function createNotificationJson($JsonArr){
+	if(checkCloudJson){
+		switch ($JsonArr['notification']['task']) {
+			case 'alert':
+				sendNotification($JsonArr);
+				break;	
+		}
+	}else{
+		//$JsonArr['cloud']['task'] = 'false';	
+		//SimpleLogger::debug("Json false - ".json_encode($JsonArr['cloud'], JSON_UNESCAPED_SLASHES)."(createUpdateJson)\n");
+	}
+	return $JsonArr;
+}
+
+function sendNotification($JsonArr){
+	foreach($JsonArr['notification']['services'] as $key => $value){
+		switch ($key) {
+			case 'telegram':	
+				sendTelegram($JsonArr,$value);
+				break;
+			case 'pushover':
+				// ToDO
+				break;
+			case 'mail':
+				// ToDo
+				break;
+		}
+	}
+}
+
+function getMsg($ch,$msg,$lang){
+	$de = array("msg0" => "ACHTUNG!","msg1" => "Kanal","msg2" => "hat","up" => "Übertemperatur","down" => "Untertemperatur");
+	$en = array("msg0" => "ATTENTION!","msg1" => "Channel","msg2" => "has","up" => "overtemperature","down" => "undertemperature");
+	switch ($lang) {
+		case de:
+			$message = ''.$de["msg0"].' '.$de["msg1"].''.$ch.' '.$de["msg2"].' '.$de["".$msg.""].'.';
+			return $message;
+			break;
+		case en:
+			$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
+			return $message;
+			break;
+		default:
+			$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
+			return $message;
+	}
+}
+
+function sendTelegram($JsonArr,$services){	
+	$url = 'https://api.telegram.org/bot' . $services['key1'] . '/sendMessage?text="'.getMsg($JsonArr['notification']['channel'],$JsonArr['notification']['message'],$JsonArr['notification']['lang']).'"&chat_id='.$services['key2'].'';
+	$result = json_decode(file_get_contents($url));
+	if($result->ok === true){
+		SimpleLogger::info("Message has been sent! \n");
+	}else{
+		SimpleLogger::error("Message could not be sent! \n");		
+	}
+}
+
+function sendPushover($token,$chatID,$msg){
+	curl_setopt_array($ch = curl_init(), array(
+	  CURLOPT_URL => "https://api.pushover.net/1/messages.json",
+	  CURLOPT_POSTFIELDS => array(
+		"token" => $token,
+		"user" => $chatID,
+		"message" => $msg,
+	  ),
+	  CURLOPT_SAFE_UPLOAD => true,
+	  CURLOPT_RETURNTRANSFER => true,
+	));
+	curl_exec($ch);
+	curl_close($ch);
 }
 ?>

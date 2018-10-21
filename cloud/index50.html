@@ -4,17 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="WLANThermo Nano Cloud">
-	<!-- <meta http-equiv="cache-control" content="max-age=0" /> -->
-	<!-- <meta http-equiv="cache-control" content="no-cache" /> -->
-	<!-- <meta http-equiv="expires" content="0" /> -->
-	<!-- <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" /> -->
-	<!-- <meta http-equiv="pragma" content="no-cache" /> -->
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-title" content="WlanThermo Nano Cloud">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
     <title>WLANThermo - Nano</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
 	<style>
 @font-face {
@@ -690,6 +686,24 @@
 				display:block;
 				font-size:.75em;
 				padding:.2em 0 .8em
+			}
+		}
+		
+		@media only screen and (max-width :480px) and (orientation: portrait){
+			#temp_channel{
+				display:inline;
+			}
+			#chart_container{
+				display:none;
+			}
+		}
+
+		@media only screen and (max-width :768px) and (orientation: landscape){
+			#temp_channel{
+				display:none;
+			}
+			#chart_container{
+				display:inline;
 			}
 		}
 
@@ -1815,11 +1829,6 @@
 			</a>
             <ul class="pure-menu-list">
 			    <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-	
-	
-	
-	
-	
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>	
         </div>
@@ -1830,112 +1839,32 @@
             <h1>WLANThermo - Nano</h1>
         </div>
 		<!-- ################################################### -->
-        <div id="index" class="content" class="hidden" style="display:none">
-            <div class="pure-g">
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
+		<!-- ################################################### -->
+        <div class="channel_template" style="display:none">
+			<div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4">
+				<div class="1-box channel">
+					<div class="chtitle">N.C.</div>
+					<div class="chnumber">N.C.</div>
+					<div class="tempadjust">
+						<div class="tempmax">N.C.</div>
+						<div class="tempmin">N.C.</div>
 					</div>
-                </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
-					</div>
-                </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
-					</div>
-                </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
-					</div>
-                </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
-					</div>
-                </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
-					</div>
-                </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
-					</div>
-                </div>
-                <div class="pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index">
-					<div class="1-box channel">
-						<div class="chtitle"></div>
-						<div class="chnumber"></div>
-							<div class="tempadjust">
-								<div class="tempmax"></div>
-								<div class="tempmin"></div>
-							</div>
-							<div class="temp"></div>
-							<div class="clear"></div>
-					</div>
-                </div>
-				<div class="pure-u-1-1 pure-u-lg-1-1">
-					<div class="1-box chart_container">						
-						<canvas id="nanoChart"></canvas>
-					</div>
+					<div class="temp">N.C.</div>
+					<div class="clear"></div>
 				</div>
-				
-            </div>
-        </div>
+			</div>
+		</div>
+ 		<!-- ################################################### -->
+        <div id="index" class="content" class="hidden" style="display:none">
+            <div class="pure-g channel_index"><!-- Dynamically channel insert --></div>
+		</div> 
+
+		<div id="chart_container" class="pure-u-1-1 pure-u-lg-1-1">
+			<div class="1-box chart_container">						
+				<canvas id="nanoChart"></canvas>
+			</div>
+		</div>
+   
 		<!-- ################################################### -->
 
 		<div id="about" class="content" style="display:none">
@@ -1966,9 +1895,10 @@
 </div>
 <script> 
 	var chart_ts;
+	var chart_init = false;
 	var unit = '°';
 	var pit_act = false;
-	var ch_name = new Array('#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', 'PIT set', 'PIT val','Battery');
+	var ch_name = new Array('#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', 'PIT set', 'PIT val');
 	HTTP_GET_VARS=new Array();
 	strGET=document.location.search.substr(1,document.location.search.length);
 	if(strGET!=''){
@@ -1994,6 +1924,7 @@
 	var byId = function( id ) { return document.getElementById( id ); };
 	var byClass = function( id ) { return document.getElementsByClassName( id ); };
 	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
+	byId('index').style.display = "inline";									
 	(function (window, document) {
 
 		var byId = function( id ) { return document.getElementById( id ); };
@@ -2040,6 +1971,7 @@
 	byId('index').style.display = "inline";
 		
 	var updateActivated = 'false';
+		
 	function showLoader(show){
 		if (show == 'true') {
 			byId('cover').classList.add("cover_active");
@@ -2147,6 +2079,18 @@
 			return data;		
 		}
 	}
+
+	function addChannel(){
+		$( ".channel_template:first" ).children().clone().appendTo(".channel_index:last");
+		$(".channel_index").children().last().addClass("temp_index");
+		$(".channel_index").children().last().click(function () {
+			showSetChannel(this.getElementsByClassName('chnumber')[0].innerHTML);
+		});	
+	}
+	
+	function removeChannel(){
+		$(".channel_index").children().last().remove();
+	}
 	
 	function readTemp(){
 		if (updateActivated == 'true'){
@@ -2155,68 +2099,96 @@
 			loadJSON(api_data, '', '3000', function (response) {
 				if (response == 'false'){
 					alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
-					 window.location = "http://www.wlanthermo.de/";
+					 window.location = "http://www.wlanthermo.com/";
 				}
-				jr = JSON.parse(response);
-				unit = jr.system.unit;
-				BatteryIcon = getBatteryIcon(jr.system.soc,jr.system.charge);
-				byClass("battery")[0].innerHTML = BatteryIcon;
-				byId('thermoname').innerHTML = timeConverter(jr.system.time);
-				RSSIIcon = getRSSIIcon(jr.system.rssi);
-				byClass("wifi")[0].innerHTML = RSSIIcon;
-				var x = byClass("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
-				var i;
-				for (i = 0; i < x.length; i++) {
-					ch_name[i] = '#' + jr.channel[i].number + ' ' + jr.channel[i].name;
-					x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
-					x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
-					if(jr.pitmaster.typ == 'auto' || jr.pitmaster.typ == 'autotune'){
-						if (jr.pitmaster.channel == jr.channel[i].number){
-							var a = getIcon('uniF2C7') + jr.pitmaster.set + '°' + ' / ';
-							var e = ' ' + jr.pitmaster.value + '%';
-							if(jr.pitmaster.value == '0'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan') + ' ' + jr.pitmaster.value + '%';
-							}else if (jr.pitmaster.value <= '25'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-25') + e;
-							}else if (jr.pitmaster.value <= '50'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-50') + e;
-							}else if (jr.pitmaster.value <= '75'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-75') + e;
-							}else if (jr.pitmaster.value <= '100'){
-								x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-100') + e;
+				try {
+					jr = JSON.parse(response);
+					unit = jr.system.unit;
+					BatteryIcon = getBatteryIcon(jr.system.soc,jr.system.charge);
+					byClass("battery")[0].innerHTML = BatteryIcon;
+					byId('thermoname').innerHTML = timeConverter(jr.system.time);
+					RSSIIcon = getRSSIIcon(jr.system.rssi);
+					byClass("wifi")[0].innerHTML = RSSIIcon;
+					var x = byClass("pure-u-1-1 pure-u-md-1-2 pure-u-xl-1-4 temp_index");
+					var i;
+					var ch_count = 0;
+					
+					while ($(".channel_index").children().length < jr.channel.length) {
+						addChannel();
+
+					}
+					while ($(".channel_index").children().length > jr.channel.length) {
+						removeChannel();
+					} 
+					
+					if(chart_init === false){
+						console.log('Haö');
+						initializeChart(jr.channel.length);  
+						console.log('Haö12345');						
+					}
+
+					for (i = 0; i < jr.channel.length; i++) {
+						ch_name[i] = '#' + jr.channel[i].number + ' ' + jr.channel[i].name;
+						x[i].getElementsByClassName('1-box channel')[0].style.borderColor = jr.channel[i].color;
+						x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
+						if(jr.pitmaster.typ == 'auto' || jr.pitmaster.typ == 'autotune'){
+							if (jr.pitmaster.channel == jr.channel[i].number){
+								var a = getIcon('uniF2C7') + jr.pitmaster.set + '°' + ' / ';
+								var e = ' ' + jr.pitmaster.value + '%';
+								if(jr.pitmaster.value == '0'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan') + ' ' + jr.pitmaster.value + '%';
+								}else if (jr.pitmaster.value <= '25'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-25') + e;
+								}else if (jr.pitmaster.value <= '50'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-50') + e;
+								}else if (jr.pitmaster.value <= '75'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-75') + e;
+								}else if (jr.pitmaster.value <= '100'){
+									x[i].getElementsByClassName('chtitle')[0].innerHTML = a + getIcon('fan icon-rotate-100') + e;
+								}
+							}else{
+								x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 							}
 						}else{
 							x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
 						}
-					}else{
-						x[i].getElementsByClassName('chtitle')[0].innerHTML = jr.channel[i].name;
-					}
-					x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jr.channel[i].number;
-					x[i].getElementsByClassName('tempmin')[0].innerHTML = getIcon('temp_down') + jr.channel[i].min + "°";
-					x[i].getElementsByClassName('tempmax')[0].innerHTML = getIcon('temp_up') + jr.channel[i].max + "°";
-					if (jr.channel[i].temp == '999'){
-						x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
-						x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
-						x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
-					}else{
-						x[i].getElementsByClassName('temp')[0].innerHTML = jr.channel[i].temp.toFixed(1) + "°" + jr.system.unit;
-						if (jr.channel[i].temp < jr.channel[i].min){
-							x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
-							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
-						}else if (jr.channel[i].temp > jr.channel[i].max){
-							x[i].getElementsByClassName('temp')[0].style.color = "red";
-							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
-						}else{
-							x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+						x[i].getElementsByClassName('chnumber')[0].innerHTML = "#" + jr.channel[i].number;
+						x[i].getElementsByClassName('tempmin')[0].innerHTML = getIcon('temp_down') + jr.channel[i].min + "°";
+						x[i].getElementsByClassName('tempmax')[0].innerHTML = getIcon('temp_up') + jr.channel[i].max + "°";
+						if (jr.channel[i].temp == '999'){
+							x[i].style.display = 'none';	  
+							x[i].getElementsByClassName('temp')[0].innerHTML = 'OFF';
+							x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";		
 							x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+						}else{
+							ch_count++;
+							x[i].style.display = 'inline';							
+							x[i].getElementsByClassName('temp')[0].innerHTML = jr.channel[i].temp.toFixed(1) + "°" + jr.system.unit;
+							if (jr.channel[i].temp < jr.channel[i].min){
+								x[i].getElementsByClassName('temp')[0].style.color = "#1874cd";
+								x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+							}else if (jr.channel[i].temp > jr.channel[i].max){
+								x[i].getElementsByClassName('temp')[0].style.color = "red";
+								x[i].getElementsByClassName('temp')[0].style.fontWeight = 'bold';
+							}else{
+								x[i].getElementsByClassName('temp')[0].style.color = "#FFFFFF";
+								x[i].getElementsByClassName('temp')[0].style.fontWeight = 'normal';
+							}
 						}
 					}
+					if(chart_ts != jr.system.time && pit_act === true){
+						//addData(timeConverter(jr.system.time),jr,true);
+						chart_ts = jr.system.time;
+					}
+					if (ch_count == 0){
+						for (i = 0; i < jr.channel.length; i++) {
+							x[i].style.display = 'inline';
+						}
+																
+					}					
+				} catch(e) {
+					//alert(e); // error in the above string (in this case, yes)!
 				}
-				if(chart_ts != jr.system.time && pit_act === true){
-					addData(timeConverter(jr.system.time),jr,true);
-					chart_ts = jr.system.time;
-				}
-				
 			})
 		}
 	}
@@ -2238,101 +2210,22 @@
 	  //alert(unix + ' ' + UNIX_timestamp);
 	  return time;
 	}
-Chart.defaults.global.animationSteps = 50;
-Chart.defaults.global.tooltipYPadding = 16;
-Chart.defaults.global.tooltipCornerRadius = 0;
-Chart.defaults.global.defaultFontColor= 'white';
-Chart.defaults.global.tooltipTitleFontStyle = "normal";
-Chart.defaults.global.tooltips.mode = "index";
-Chart.defaults.global.tooltips.intersect = false;
-Chart.defaults.global.legend.labels.boxWidth = 15;
-//Chart.defaults.global.tooltipFillColor = "rgba(0,160,0,0.8)";
-Chart.defaults.global.animationEasing = "easeOutBounce";
-Chart.defaults.global.responsive = true;
-//Chart.defaults.global.scaleLineColor = "black";
-Chart.defaults.global.scaleFontSize = 16;
+	Chart.defaults.global.animationSteps = 50;
+	Chart.defaults.global.tooltipYPadding = 16;
+	Chart.defaults.global.tooltipCornerRadius = 0;
+	Chart.defaults.global.defaultFontColor= 'white';
+	Chart.defaults.global.tooltipTitleFontStyle = "normal";
+	Chart.defaults.global.tooltips.mode = "index";
+	Chart.defaults.global.tooltips.intersect = false;
+	Chart.defaults.global.legend.labels.boxWidth = 15;
+	//Chart.defaults.global.tooltipFillColor = "rgba(0,160,0,0.8)";
+	Chart.defaults.global.animationEasing = "easeOutBounce";
+	Chart.defaults.global.responsive = true;
+	//Chart.defaults.global.scaleLineColor = "black";
+	Chart.defaults.global.scaleFontSize = 16;
     var myContext = document.getElementById("nanoChart");
-    var myChartConfig = {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [
-           {
-			   label: "#1",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',           
-			   data: []
-           },{
-			   label: "#2",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',
-			   data: []
-           },{
-			   label: "#3",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',
-			   data: []
-           },{
-			   label: "#4",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',
-			   data: []
-           },{
-			   label: "#5",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',
-			   data: []
-           },{
-			   label: "#6",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',
-			   data: []
-           },{
-			   label: "#7",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',
-			   data: []
-           },{
-			   label: "#8",
-			   yAxisID: "A",
-			   radius: 0,
-			   borderColor: 'white',
-			   data: []
-           },{
-			   label: "PID set",
-			   yAxisID: "A",
-			   radius: 0,
-			   lineTension: 0,
-			   borderColor: 'red',
-			   borderDash: [10,5],
-			   data: []
-           },{
-			   label: "PID val",
-			   yAxisID: "B", 
-			   radius: 0,
-			   lineTension: 0,
-			   borderColor: 'rgba(0, 0, 0, 0.2)',
-			   borderWidth: 1,
-			   data: []
-           },{
-			   label: "Battery",
-			   yAxisID: "B", 
-			   radius: 0,
-			   lineTension: 0,
-			   borderColor: 'white',
-			   borderWidth: 1,
-			   data: []
-           }
-        ]
-      },
-	  options:{
+    
+	var chartOptions = {
 		scales:{
 			xAxes:[{
 			type: 'time',
@@ -2340,13 +2233,13 @@ Chart.defaults.global.scaleFontSize = 16;
 				  displayFormats: {
 					'millisecond': 'k:mm:ss',
 					'second': 'k:mm:ss',
-					'minute': 'k:mm:ss',
-					'hour': 'k:mm:ss',
-					'day': 'k:mm:ss',
-					'week': 'k:mm:ss',
-					'month': 'k:mm:ss',
-					'quarter': 'k:mm:ss',
-					'year': 'k:mm:ss',
+					'minute': 'k:mm',
+					'hour': 'k:mm',
+					'day': 'k:mm',
+					'week': 'k:mm',
+					'month': 'k:mm',
+					'quarter': 'k:mm',
+					'year': 'k:mm',
 				  }
 				},
 				ticks:{
@@ -2375,39 +2268,86 @@ Chart.defaults.global.scaleFontSize = 16;
 				},
 
 			]		
-		},
-		tooltips: {
+		}};
+		
+	var chartTooltips = {
             enabled: true,
             callbacks: {
                 label: function(tooltipItems, data) { 
-					if(tooltipItems.datasetIndex == '9' || tooltipItems.datasetIndex == '10'){
+					if(tooltipItems.datasetIndex == '9'){
 						return tooltipItems.yLabel + '%' + ' - ' + ch_name[tooltipItems.datasetIndex];
 					}else{
 						return tooltipItems.yLabel + '°' + unit + ' - ' + ch_name[tooltipItems.datasetIndex];
 					} 
                 }
             }
-        }
-	  }
+        };
+
+	var chartData = {
+			labels: [],
+		datasets: [{
+			data: [],
+		  backgroundColor: [],
+		  hoverBackgroundColor: []
+		}]
 	};
-  var nanoChart = new Chart(myContext, myChartConfig);   
+function initializeChart(channelLength){
+	
+	myChartConfig = {
+		type: 'line',
+		data: chartData,
+		options: chartOptions,
+		tooltips: chartTooltips
+	};
+	console.log(myChartConfig);
+	//var chart = new Chart(myContext,myChartConfig);
+	<!-- for (i = 0; i < channelLength; i++) { -->
+		<!-- chart.config.data.labels.push('#' + channelLength); -->
+	<!-- } -->
+	//console.log('Test');
+	//chart.config.data.labels.push("A label2");
+	//chart.config.data.datasets[0].data.push(10);
+	//chart.config.data.datasets[0].data.push(20);
+	//hart.update();	
+	
+	
+	//for (i = 0; i < channelLength; i++) {
+		//test.i.label = '#';
+		//test.label[i] = '#';
+		//test[i].yAxisID = 'A';
+		//test[i].radius = '0';
+		//test[i].borderColor = 'white';
+		//test[i].data = [];
+	//}
+	console.log(test);
+	
+	<!-- console.log(myChartConfig); -->
+	<!-- nanoChart = new Chart(myContext, myChartConfig); -->
+	//loadChartData();
+}
+
 
 function loadChartData(){
 	loadJSON(api_data_test, '', '10000', function (response_1) {
 		if (response_1 == 'false'){
 			alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
-			window.location = "http://www.wlanthermo.de/";
+			window.location = "http://www.wlanthermo.com/";
+		}else{
+			var response = response_1.split(";");
+				for (var i = 0; i < response.length -1; i++) {			
+					try {
+						jr = JSON.parse(response[i]);
+						if(chart_ts != jr.system.time){
+							addData(timeConverter(jr.system.time),jr,false);
+							chart_ts = jr.system.time;
+						}
+					} catch(e) {
+						//alert(e); // error in the above string (in this case, yes)!
+					}	
+				}
+			pit_act = true;
+			readTemp();
 		}
-		var response = response_1.split(";");
-		for (var i = 0; i < response.length -1; i++) {			
-			jr = JSON.parse(response[i]);
-			if(chart_ts != jr.system.time){
-				addData(timeConverter(jr.system.time),jr,false);
-				chart_ts = jr.system.time;
-			}	
-		}
-		pit_act = true;
-		readTemp();		
 	})
 }  
   
@@ -2415,36 +2355,41 @@ function addData(timestamp,jr,update){
 	nanoChart.data.labels.push(timestamp);
 	var i;
 	for (i = 0; i < jr.channel.length; i++) {
-		nanoChart.data.datasets[i].borderColor = jr.channel[i].color;
-		nanoChart.data.datasets[i].backgroundColor = jr.channel[i].color;
-		nanoChart.data.datasets[i].fill = false;
-		if (jr.channel[i].temp == '999'){
-		//nanoChart.data.datasets[i].showLine = false;
-			nanoChart.data.datasets[i].data.push(null);
+		if(typeof jr.channel[i].temp !== "undefined"){
+			nanoChart.data.datasets[i].borderColor = jr.channel[i].color;
+			nanoChart.data.datasets[i].backgroundColor = jr.channel[i].color;
+			nanoChart.data.datasets[i].fill = false;
+			if (jr.channel[i].temp == '999'){
+			//nanoChart.data.datasets[i].showLine = false;
+				nanoChart.data.datasets[i].data.push(null);
+			}else{
+				//nanoChart.data.datasets[i].showLine = true;
+				nanoChart.data.datasets[i].data.push(jr.channel[i].temp.toFixed(1) );
+			}
 		}else{
-			//nanoChart.data.datasets[i].showLine = true;
-			nanoChart.data.datasets[i].data.push(jr.channel[i].temp.toFixed(1) );
+			nanoChart.data.datasets[i].data.push(null);
 		}
 	}
 	nanoChart.data.datasets[8].fill = false;
-    if(jr.pitmaster.typ == 'off'){
+    if(typeof jr.pitmaster.typ !== "undefined" && typeof jr.pitmaster.set !== "undefined" && typeof jr.pitmaster.value !== "undefined"){
+		if(jr.pitmaster.typ == 'off'){
+			nanoChart.data.datasets[8].data.push(null);
+			nanoChart.data.datasets[9].data.push(null);	
+		}else{
+			nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
+			nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
+		}
+	}else{
 		nanoChart.data.datasets[8].data.push(null);
 		nanoChart.data.datasets[9].data.push(null);	
-	}else{
-		nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
-		nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
 	}
-	nanoChart.data.datasets[10].fill = false;
-	nanoChart.data.datasets[10].data.push(jr.system.soc);	
 	if(update === true){
 		nanoChart.update();	
 	}
 
 }
 
-
-readTemp();	
-loadChartData();	
+readTemp();		
 </script>
 
 </body>

@@ -1815,11 +1815,6 @@
 			</a>
             <ul class="pure-menu-list">
 			    <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
-	
-	
-	
-	
-	
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>	
         </div>
@@ -1968,7 +1963,7 @@
 	var chart_ts;
 	var unit = '°';
 	var pit_act = false;
-	var ch_name = new Array('#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', 'PIT set', 'PIT val','Battery');
+	var ch_name = new Array('#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', 'PIT set', 'PIT val');
 	HTTP_GET_VARS=new Array();
 	strGET=document.location.search.substr(1,document.location.search.length);
 	if(strGET!=''){
@@ -2040,6 +2035,7 @@
 	byId('index').style.display = "inline";
 		
 	var updateActivated = 'false';
+		
 	function showLoader(show){
 		if (show == 'true') {
 			byId('cover').classList.add("cover_active");
@@ -2155,7 +2151,7 @@
 			loadJSON(api_data, '', '3000', function (response) {
 				if (response == 'false'){
 					alert('ACHTUNG! Es wurden keine Daten am Server gefunden!');
-					 window.location = "http://www.wlanthermo.de/";
+					 window.location = "http://www.wlanthermo.com/";
 				}
 				jr = JSON.parse(response);
 				unit = jr.system.unit;
@@ -2238,19 +2234,19 @@
 	  //alert(unix + ' ' + UNIX_timestamp);
 	  return time;
 	}
-Chart.defaults.global.animationSteps = 50;
-Chart.defaults.global.tooltipYPadding = 16;
-Chart.defaults.global.tooltipCornerRadius = 0;
-Chart.defaults.global.defaultFontColor= 'white';
-Chart.defaults.global.tooltipTitleFontStyle = "normal";
-Chart.defaults.global.tooltips.mode = "index";
-Chart.defaults.global.tooltips.intersect = false;
-Chart.defaults.global.legend.labels.boxWidth = 15;
-//Chart.defaults.global.tooltipFillColor = "rgba(0,160,0,0.8)";
-Chart.defaults.global.animationEasing = "easeOutBounce";
-Chart.defaults.global.responsive = true;
-//Chart.defaults.global.scaleLineColor = "black";
-Chart.defaults.global.scaleFontSize = 16;
+	Chart.defaults.global.animationSteps = 50;
+	Chart.defaults.global.tooltipYPadding = 16;
+	Chart.defaults.global.tooltipCornerRadius = 0;
+	Chart.defaults.global.defaultFontColor= 'white';
+	Chart.defaults.global.tooltipTitleFontStyle = "normal";
+	Chart.defaults.global.tooltips.mode = "index";
+	Chart.defaults.global.tooltips.intersect = false;
+	Chart.defaults.global.legend.labels.boxWidth = 15;
+	//Chart.defaults.global.tooltipFillColor = "rgba(0,160,0,0.8)";
+	Chart.defaults.global.animationEasing = "easeOutBounce";
+	Chart.defaults.global.responsive = true;
+	//Chart.defaults.global.scaleLineColor = "black";
+	Chart.defaults.global.scaleFontSize = 16;
     var myContext = document.getElementById("nanoChart");
     var myChartConfig = {
       type: 'line',
@@ -2321,14 +2317,6 @@ Chart.defaults.global.scaleFontSize = 16;
 			   borderColor: 'rgba(0, 0, 0, 0.2)',
 			   borderWidth: 1,
 			   data: []
-           },{
-			   label: "Battery",
-			   yAxisID: "B", 
-			   radius: 0,
-			   lineTension: 0,
-			   borderColor: 'white',
-			   borderWidth: 1,
-			   data: []
            }
         ]
       },
@@ -2380,7 +2368,7 @@ Chart.defaults.global.scaleFontSize = 16;
             enabled: true,
             callbacks: {
                 label: function(tooltipItems, data) { 
-					if(tooltipItems.datasetIndex == '9' || tooltipItems.datasetIndex == '10'){
+					if(tooltipItems.datasetIndex == '9'){
 						return tooltipItems.yLabel + '%' + ' - ' + ch_name[tooltipItems.datasetIndex];
 					}else{
 						return tooltipItems.yLabel + '°' + unit + ' - ' + ch_name[tooltipItems.datasetIndex];
@@ -2390,8 +2378,29 @@ Chart.defaults.global.scaleFontSize = 16;
         }
 	  }
 	};
-  var nanoChart = new Chart(myContext, myChartConfig);   
+var nanoChart = new Chart(myContext, myChartConfig);   
 
+function yAxesChange(pitmaster){
+	if(pitmaster == true){
+		//delete myChartConfig.options.scales.yAxes[1].ticks;
+		delete myChartConfig.options.scales.yAxes[1].ticks.min;
+		delete myChartConfig.options.scales.yAxes[1].ticks.max;
+		myChartConfig.options.scales.yAxes[1].id = 'B';
+		myChartConfig.data.datasets[9].yAxisID = 'B';
+		myChartConfig.options.scales.yAxes[1].ticks.min = 0;
+		myChartConfig.options.scales.yAxes[1].ticks.max = 100;
+		myChartConfig.options.scales.yAxes[1].ticks.userCallback = function(label, index, labels) {return label + '%'};
+	}else{
+		delete myChartConfig.options.scales.yAxes[1].ticks.min;
+		delete myChartConfig.options.scales.yAxes[1].ticks.max;
+		myChartConfig.options.scales.yAxes[1].id = 'A';
+		//delete myChartConfig.options.scales.yAxes[1].ticks;
+		myChartConfig.data.datasets[9].yAxisID = 'A';
+		myChartConfig.options.scales.yAxes[1].ticks.userCallback = function(label, index, labels) {return label.toFixed(1) + '°' + unit};
+	}
+	nanoChart.update();
+}
+yAxesChange(true);
 function loadChartData(){
 	loadJSON(api_data_test, '', '10000', function (response_1) {
 		if (response_1 == 'false'){
@@ -2434,8 +2443,6 @@ function addData(timestamp,jr,update){
 		nanoChart.data.datasets[8].data.push(jr.pitmaster.set);
 		nanoChart.data.datasets[9].data.push(jr.pitmaster.value);	
 	}
-	nanoChart.data.datasets[10].fill = false;
-	nanoChart.data.datasets[10].data.push(jr.system.soc);	
 	if(update === true){
 		nanoChart.update();	
 	}

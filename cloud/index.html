@@ -1828,6 +1828,7 @@
 			</a>
             <ul class="pure-menu-list">
 			    <li id="menuHome" class="pure-menu-item"><a href="javascript:showIndex()" class="pure-menu-link">Home</a></li>
+				<li id="menuForum" class="pure-menu-item"><a href="https://forum.wlanthermo.de" class="pure-menu-link">Forum</a></li>
                 <li id="menuAbout" class="pure-menu-item"><a href="javascript:showAbout()" class="pure-menu-link">Über</a></li>
             </ul>	
         </div>
@@ -2006,7 +2007,7 @@
 
 		var byId = function( id ) { return document.getElementById( id ); };
 	
-		var layout = byId('layout'),menu = byId('menu'),menuLink = byId('menuLink'),menuHome = byId('menuHome'),menuAbout = byId('menuAbout'),content  = byId('main');
+		var layout = byId('layout'),menu = byId('menu'),menuLink = byId('menuLink'),menuHome = byId('menuHome'),menuForum = byId('menuForum'),menuAbout = byId('menuAbout'),content  = byId('main');
 		function toggleClass(element, className) {
 			var classes = element.className.split(/\s+/),
 				length = classes.length,
