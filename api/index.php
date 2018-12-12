@@ -388,7 +388,7 @@ function createNotificationJson($JsonArr){
 		switch ($JsonArr['notification']['task']) {
 			case 'alert':
 				sendNotification($JsonArr);
-				break;	
+				break;
 		}
 	}else{
 		//$JsonArr['cloud']['task'] = 'false';	
@@ -399,12 +399,12 @@ function createNotificationJson($JsonArr){
 
 function sendNotification($JsonArr){
 	foreach($JsonArr['notification']['services'] as $key => $value){
-		switch ($key) {
+		switch ($value['service']) {
 			case 'telegram':	
 				sendTelegram($JsonArr,$value);
 				break;
 			case 'pushover':
-				// ToDO
+				sendPushover($JsonArr,$value);
 				break;
 			case 'mail':
 				// ToDo
@@ -413,26 +413,55 @@ function sendNotification($JsonArr){
 	}
 }
 
-function getMsg($ch,$msg,$lang){
-	$de = array("msg0" => "ACHTUNG!","msg1" => "Kanal","msg2" => "hat","up" => "Übertemperatur","down" => "Untertemperatur");
-	$en = array("msg0" => "ATTENTION!","msg1" => "Channel","msg2" => "has","up" => "overtemperature","down" => "undertemperature");
-	switch ($lang) {
+function getMsg($JsonArr){
+	$de_alert_up = 'ACHTUNG! Kanal %s: Temperatur (%s°%s) ist zu hoch (%s°%s)';
+	$de_alert_down = 'ACHTUNG! Kanal %s: Temperatur (%s°%s) ist zu tief (%s°%s)';
+	$en_alert_up = 'ATTENTION! Channel %s: Temperature (%s°%s) is too high (%s°%s)';
+	$en_alert_down = 'ATTENTION!  Channel %s: Temperature (%s°%s) is too low (%s°%s)';
+	
+	$de_alert_battery = 'Achtung: Die Batterieladung ist niedrig! Bitte ein Netzteil anschließen.';
+	$en_alert_battery = 'Attention: Battery charge is low! Please connect a power adapter.';
+	$de_alert_test = 'Testnachricht erfolgreich gesendet. Deine Einstellungen sind korrekt.';
+	$en_alert_test = 'Message sent successfully. Your settings are correct.';
+	
+	
+	switch ($JsonArr['notification']['lang']) {
 		case de:
-			$message = ''.$de["msg0"].' '.$de["msg1"].''.$ch.' '.$de["msg2"].' '.$de["".$msg.""].'.';
-			return $message;
+			if($JsonArr['notification']['message'] == 'up'){
+			return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+			}else if($JsonArr['notification']['message'] === 'down'){
+				return sprintf($de_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+			}else if($JsonArr['notification']['message'] === 'battery'){
+				return $de_alert_battery;	
+			}else if($JsonArr['notification']['message'] === 'test'){
+				return $de_alert_test;
+			}
 			break;
 		case en:
-			$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
-			return $message;
-			break;
+			if($JsonArr['notification']['message'] == 'up'){
+				return sprintf($en_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+			}else if($JsonArr['notification']['message'] === 'down'){
+				return sprintf($en_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+			}else if($JsonArr['notification']['message'] === 'battery'){
+				return $en_alert_battery;	
+			}else if($JsonArr['notification']['message'] === 'test'){
+				return $en_alert_test;
+			}
 		default:
-			$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
-			return $message;
+			if($JsonArr['notification']['message'] == 'up'){
+				return sprintf($en_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+			}else if($JsonArr['notification']['message'] === 'down'){
+				return sprintf($en_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+			}else if($JsonArr['notification']['message'] === 'battery'){
+				return $en_alert_battery;	
+			}else if($JsonArr['notification']['message'] === 'test'){
+				return $en_alert_test;
+			}
 	}
 }
 
 function sendTelegram($JsonArr,$services){	
-	$url = 'https://api.telegram.org/bot' . $services['key1'] . '/sendMessage?text="'.getMsg($JsonArr['notification']['channel'],$JsonArr['notification']['message'],$JsonArr['notification']['lang']).'"&chat_id='.$services['key2'].'';
+	$url = 'https://api.telegram.org/bot' . $services['key1'] . '/sendMessage?text="'.getMsg($JsonArr).'"&chat_id='.$services['key2'].'';
 	$result = json_decode(file_get_contents($url));
 	if($result->ok === true){
 		SimpleLogger::info("Message has been sent! \n");
@@ -441,13 +470,13 @@ function sendTelegram($JsonArr,$services){
 	}
 }
 
-function sendPushover($token,$chatID,$msg){
+function sendPushover($JsonArr,$services){
 	curl_setopt_array($ch = curl_init(), array(
 	  CURLOPT_URL => "https://api.pushover.net/1/messages.json",
 	  CURLOPT_POSTFIELDS => array(
-		"token" => $token,
-		"user" => $chatID,
-		"message" => $msg,
+		"token" => $services['key1'],
+		"user" => $services['key2'],
+		"message" => getMsg($JsonArr),
 	  ),
 	  CURLOPT_SAFE_UPLOAD => true,
 	  CURLOPT_RETURNTRANSFER => true,
@@ -455,4 +484,5 @@ function sendPushover($token,$chatID,$msg){
 	curl_exec($ch);
 	curl_close($ch);
 }
+
 ?>

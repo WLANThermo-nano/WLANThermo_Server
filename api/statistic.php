@@ -3,7 +3,7 @@
     Copyright (C) 2018  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 0.2, 26/02/18
+		@version 0.3, 12/12/18
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
