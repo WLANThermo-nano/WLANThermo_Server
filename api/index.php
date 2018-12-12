@@ -89,10 +89,6 @@ $test = '{
 		"notification": {
 			"host": "message.wlanthermo.de",
 			"page": "/message.php"
-		},
-		"thingspeak": {
-			"host": "api.thingspeak.com",
-			"page": "/update.json"
 		}
 	}
 }';
@@ -165,7 +161,12 @@ function checkDeviceJson($JsonArr){
 
 function createUpdateJson($dbh,$JsonArr){
 	if(checkDeviceDatabase($dbh,$JsonArr)){
-		$newVersion = checkNewUpdate($dbh,$JsonArr);
+		if (isset($JsonArr['update']['version'])){
+			$newVersion = checkVersion($dbh,$JsonArr);
+		}else{
+			$newVersion = checkNewUpdate($dbh,$JsonArr);
+		}
+		
 		if ($newVersion != 'false'){
 			$JsonArr['update']['available'] = 'true';
 			$JsonArr['update']['version'] = $newVersion;
@@ -290,6 +291,32 @@ function checkNewUpdate($dbh,$JsonArr){
 		}
 	} catch (PDOException $e) {
 		SimpleLogger::error("An error has occurred - (checkNewUpdate)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		return('false');
+	}	
+}
+
+function checkVersion($dbh,$JsonArr){
+	try {
+		$sql = "select s1.software_version from sw_versions as s1, 
+				(SELECT d.serial, max(s.software_id) as software_id FROM `devices` as d, sw_versions as s WHERE 
+				d.device = s.device and d.update_active = 1 and d.serial = :serial and s.software_version = :version
+                group by d.serial) as s2
+				where 
+				s1.software_id = s2.software_id";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':serial', $JsonArr['device']['serial']);
+		$statement->bindValue(':version', $JsonArr['update']['version']);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		if ($statement->rowCount() > 0) {
+		  $deviceInfo = $statement->fetch();
+		  return($deviceInfo['software_version']);
+		} else {
+		  return('false');
+		}
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (checkVersion)\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		return('false');
 	}	
