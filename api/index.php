@@ -3,7 +3,7 @@
     Copyright (C) 2018  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 0.2, 26/02/18
+		@version 0.3, 29/12/18
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
     HISTORY: Please refer Github History
     
  ****************************************************/
- 
 //-----------------------------------------------------------------------------
 // error reporting
  error_reporting(E_ALL); 
@@ -139,6 +138,7 @@ if(checkDeviceJson($JsonArr)){
 	}
 	$JsonArr['runtime'] = (microtime(true) - $time_start);
 	$json = json_encode($JsonArr, JSON_UNESCAPED_SLASHES);	
+	header('Access-Control-Allow-Origin: *'); 
 	header('Content-Type: application/json');
 	header("Content-Length: ".strlen($json));
 	echo $json;	

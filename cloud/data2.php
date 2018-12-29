@@ -37,6 +37,17 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 		}else{
 			echo $result;
 		}	
+	}else if(isset($_GET['chartCSV'])){
+		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
+			$result = "".$_GET['callback']."('" . getHistory($dbh,$_GET['api_token'],$history_time) . "');";	// Look for Device into Database	
+		}else{
+			$result = getCSV($dbh,$_GET['api_token'],$history_time); // Look for Device into Database	
+		}
+		if($result === false){
+			die('false');
+		}else{
+			echo nl2br($result);
+		}		
 	}else{
 		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
 			$result = "".$_GET['callback']."(" . getData($dbh,$_GET['api_token']) . ");";
@@ -96,7 +107,7 @@ function getData($dbh,$api_token){
 }	
 function getHistory($dbh,$api_token,$api_time){
 	try {
-		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `time` asc";
+		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
 		$statement = $dbh->prepare($sql);
 		$statement->bindValue(':api_token', $api_token);
 		$statement->bindValue(':history_time', $api_time);
@@ -143,6 +154,87 @@ function getHistory($dbh,$api_token,$api_time){
 	}
 }	
 
+function getCSV($dbh,$api_token,$api_time){
+	//echo jsonToCsv(getHistory($dbh,$api_token,$api_time));
+	// return jsonToCsv(getHistory($dbh,$api_token,$api_time));
+	try {
+		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':api_token', $api_token);
+		$statement->bindValue(':history_time', $api_time);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		$data = array();
+		if ($statement->rowCount() > 0) {
+			foreach($statement as $daten) {
+				$obj = json_decode( $daten['data'], true );
+				if ($obj === null && json_last_error() !== JSON_ERROR_NONE) {
+					//ToDo Error Hadling
+				}else{
+					$arr = array(); 
+					$arr['system']['time'] = $obj['system']['time'];
+					$arr['system']['soc'] = $obj['system']['soc'];
+					foreach ( $obj['channel'] as $key => $value )
+					{
+						$arr['channel'][$key]['temp'] = $value['temp'];
+					}
+					if(isAssoc($obj['pitmaster'])){
+						foreach ($obj['pitmaster'] as $key => $value)
+						{
+							$arr['pitmaster'][$key]['value'] = $value['value'];
+							$arr['pitmaster'][$key]['set'] = $value['set'];
+							$arr['pitmaster'][$key]['typ'] = $value['typ'];
+						}					
+					}else{
+						$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
+						$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
+						$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+					}
+					array_push($data, $arr);
+				}
+			}
+			return(jsonToCsv($data));
+		} else {
+			return false;
+		}
+		
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (getHistory)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
+	}
+}
+
+function jsonToCsv($json) {
+	$csv = '';
+	$countchannel = count($json[0]['channel']);
+	$countpitmaster = count($json[0]['pitmaster']);
+	
+	$header = 'Zeit;Batterie';
+	for($i=1; $i <= $countchannel; $i++) {
+		$header = $header . ';Kanal ' . $i;
+	}
+	for($i=1; $i <= $countpitmaster; $i++) {
+		$header = $header . ';Pit ' . $i . ' Wert; Pit ' . $i . ' Soll; Pit ' . $i . ' Typ';
+	}
+	
+	$header = $header . PHP_EOL;
+	$csv .= $header;
+
+	//Write the lines:
+	foreach($json as $row){
+		$linestring = $row['system']['time'].';'.$row['system']['soc'];
+		for($i=0; $i < $countchannel; $i++) {
+			$linestring = $linestring . ';' . str_replace('.',',',$row['channel'][$i]['temp']);
+		}
+		for($i=0; $i < $countpitmaster; $i++) {
+			$linestring = $linestring . ';' . $row['pitmaster'][$i]['value'] . ';' . $row['pitmaster'][$i]['set'] . ';' . $row['pitmaster'][$i]['typ'];
+		}		
+		$csv .= $linestring . PHP_EOL;
+	}
+	return($csv);
+}
+  
 function isAssoc($arr){
 	if (count($arr) == count($arr, COUNT_RECURSIVE)){
 		return false;
