@@ -90,11 +90,12 @@ function getData($dbh,$api_token){
 			$arr = array();
 			$obj = json_decode( $statement->fetch()['data'], true );	
 			$arr = $obj;
-			
-			if(!isAssoc($obj['pitmaster'])){
-				unset($arr['pitmaster']);
-				$arr['pitmaster'][0] = $obj['pitmaster'];
-			}			
+			if(isset($obj['pitmaster'])){	
+				if(!isAssoc($obj['pitmaster'])){
+					unset($arr['pitmaster']);
+					$arr['pitmaster'][0] = $obj['pitmaster'];
+				}
+			}
 			return(json_encode($arr));
 		} else {
 		  return false;
@@ -127,17 +128,19 @@ function getHistory($dbh,$api_token,$api_time){
 					{
 						$arr['channel'][$key]['temp'] = $value['temp'];
 					}
-					if(isAssoc($obj['pitmaster'])){
-						foreach ($obj['pitmaster'] as $key => $value)
-						{
-							$arr['pitmaster'][$key]['value'] = $value['value'];
-							$arr['pitmaster'][$key]['set'] = $value['set'];
-							$arr['pitmaster'][$key]['typ'] = $value['typ'];
-						}					
-					}else{
-						$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
-						$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
-						$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+					if(isset($obj['pitmaster'])){					
+						if(isAssoc($obj['pitmaster'])){
+							foreach ($obj['pitmaster'] as $key => $value)
+							{
+								$arr['pitmaster'][$key]['value'] = $value['value'];
+								$arr['pitmaster'][$key]['set'] = $value['set'];
+								$arr['pitmaster'][$key]['typ'] = $value['typ'];
+							}					
+						}else{
+							$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
+							$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
+							$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+						}
 					}
 					array_push($data, $arr);
 				}

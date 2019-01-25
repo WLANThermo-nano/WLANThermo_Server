@@ -123,27 +123,31 @@ if(checkDeviceJson($JsonArr)){
 		SimpleLogger::error("Database - An error has occurred\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		die('false');
-	}
-	
-	foreach($JsonArr as $key => $value){
-		switch ($key) {
-			case 'update':	
-				$JsonArr = createUpdateJson($dbh,$JsonArr);
-				break;
-			case 'cloud':
-				$JsonArr = createCloudJson($dbh,$JsonArr);
-				break;
-			case 'history':
-				$JsonArr = createHistoryJson($dbh,$JsonArr);
-				break;
-			case 'notification':
-				$JsonArr = createNotificationJson($JsonArr);
-				break;
-			case 'alexa':
-				$JsonArr = createAlexaJson($dbh,$JsonArr);
-				break;
+	}	
+	if(checkDeviceDatabase($dbh,$JsonArr)){
+		foreach($JsonArr as $key => $value){
+			switch ($key) {
+				case 'update':	
+					$JsonArr = createUpdateJson($dbh,$JsonArr);
+					break;
+				case 'cloud':
+					$JsonArr = createCloudJson($dbh,$JsonArr);
+					break;
+				case 'history':
+					$JsonArr = createHistoryJson($dbh,$JsonArr);
+					break;
+				case 'notification':
+					$JsonArr = createNotificationJson($JsonArr);
+					break;
+				case 'alexa':
+					$JsonArr = createAlexaJson($dbh,$JsonArr);
+					break;
+			}
 		}
-	}
+	}else{
+		SimpleLogger::error("An error has occurred - (createUpdateJson)\n");
+		die(false);		
+	}	
 	$JsonArr['runtime'] = (microtime(true) - $time_start);
 	$json = json_encode($JsonArr, JSON_UNESCAPED_SLASHES);	
 	header('Access-Control-Allow-Origin: *'); 
@@ -198,7 +202,6 @@ function checkDeviceDatabase($dbh,$JsonArr){
 
 
 function createUpdateJson($dbh,$JsonArr){
-	if(checkDeviceDatabase($dbh,$JsonArr)){
 		if (isset($JsonArr['update']['version'])){
 			$newVersion = checkVersion($dbh,$JsonArr);
 		}else{
@@ -214,11 +217,7 @@ function createUpdateJson($dbh,$JsonArr){
 		}else{
 			$JsonArr['update']['available'] = 'false';
 			return $JsonArr;
-		}
-	}else{
-		SimpleLogger::error("An error has occurred - (createUpdateJson)\n");
-		die(false);		
-	}	
+		}	
 }
 //-----------------------------------------------------------------------------
 function checkCloudJson($dbh,$JsonArr){
