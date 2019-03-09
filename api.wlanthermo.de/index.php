@@ -32,7 +32,7 @@ $logpath = '../logs/';  // global var for logger class filepath
 require_once("../include/logger.php"); // logger class
 //-----------------------------------------------------------------------------
 // include database config
-require_once("../../config.inc.php"); // 
+require_once("../config.inc.php"); // 
 //-----------------------------------------------------------------------------
 // test JSON
 $test = '{
@@ -119,7 +119,6 @@ if(checkDeviceJson($JsonArr)){
 		$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
 		$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
 		$dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING );
-		SimpleLogger::error("Database - Connecting true\n");
 	} catch (PDOException $e) {
 		SimpleLogger::error("Database - An error has occurred\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
@@ -130,36 +129,33 @@ if(checkDeviceJson($JsonArr)){
 		switch ($key) {
 			case 'update':	
 				$JsonArr = createUpdateJson($dbh,$JsonArr);
-				SimpleLogger::debug("case update\n");
 				break;
 			case 'cloud':
 				$JsonArr = createCloudJson($dbh,$JsonArr);
-				SimpleLogger::debug("case cloud\n");
 				break;
 			case 'history':
 				$JsonArr = createHistoryJson($dbh,$JsonArr);
-				SimpleLogger::debug("case history\n");
 				break;
 			case 'notification':
 				$JsonArr = createNotificationJson($JsonArr);
-				SimpleLogger::debug("case notification\n");
 				break;
 			case 'alexa':
 				$JsonArr = createAlexaJson($dbh,$JsonArr);
-				SimpleLogger::debug("case alexa\n");
 				break;
 		}
 	}
 	$JsonArr['runtime'] = (microtime(true) - $time_start);
 	$json = json_encode($JsonArr, JSON_UNESCAPED_SLASHES);	
-	SimpleLogger::debug("".$json."\n");
-	SimpleLogger::debug("".strlen($json)."\n");
 	header('Access-Control-Allow-Origin: *'); 
-	//header('Content-type: text/html');
-	header('Content-type: application/json');
-	$length = strlen($json) + 1;
-	header("Content-Length: ".$length);
-	echo $json;
+	//header('Content-type: text/html; charset=utf-8');
+	header('Content-Type: application/json');
+	//header("Transfer-encoding: chunked");
+
+	header("Content-Length: ".strlen($json));
+	//	flush();
+	//	ob_flush();
+	//dump_chunk($json);
+	echo $json;	
 }else{
 	SimpleLogger::error("(checkDeviceJson) JSON device bad\n");
 	SimpleLogger::debug("".$json."\n");
@@ -177,6 +173,13 @@ function checkDeviceJson($JsonArr){
 	}
 }
 
+function dump_chunk($chunk)
+{
+    echo sprintf("%x\r\n", strlen($chunk));
+    echo $chunk;
+    echo "\r\n";
+}
+
 function createUpdateJson($dbh,$JsonArr){
 	if(checkDeviceDatabase($dbh,$JsonArr)){
 		if (isset($JsonArr['update']['version'])){
@@ -187,15 +190,12 @@ function createUpdateJson($dbh,$JsonArr){
 		
 		if ($newVersion != 'false'){
 			$JsonArr['update']['available'] = 'true';
-			//$JsonArr['update']['force'] = 'true';
 			$JsonArr['update']['version'] = $newVersion;
 			$JsonArr['update']['firmware']['url'] = 'http://update.wlanthermo.de/getFirmware.php?device='.$JsonArr['device']['device'].'&serial='.$JsonArr['device']['serial'].'&version='.$JsonArr['update']['version'].'';
 			$JsonArr['update']['spiffs']['url'] = 'http://update.wlanthermo.de/getSpiffs.php?device='.$JsonArr['device']['device'].'&serial='.$JsonArr['device']['serial'].'&version='.$JsonArr['update']['version'].'';
-			SimpleLogger::debug("createUpdateJson - Update\n");
 			return $JsonArr;
 		}else{
 			$JsonArr['update']['available'] = 'false';
-			SimpleLogger::debug("createUpdateJson - No Update\n");
 			return $JsonArr;
 		}
 	}else{

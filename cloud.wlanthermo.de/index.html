@@ -1846,6 +1846,76 @@
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .dropdown:hover .dropbtn {background-color: #333;} 
+
+.helpBox {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1001; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* helpBox Content */
+.helpBox-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 80%;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0} 
+    to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+/* The Close Button */
+.close {
+    color: white;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.helpBox-header {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+}
+
+.helpBox-body {padding: 2px 16px;}
+
+.helpBox-footer {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+}	
+
     </style>
 </head>
 <body>
@@ -1953,6 +2023,18 @@
 			</div>
         </div>
 		<!-- ################################################### -->
+		<div id="helpBox" class="helpBox">
+			<!-- helpBox content -->
+			<div class="helpBox-content">
+				<div class="helpBox-header">
+					<span class="close" onclick="byId('helpBox').style.display='none'">&times;</span>
+					<h2 id="helpBoxTitle">Title</h2>
+				</div>
+				<div id="helpBoxObject" class="helpBox-body">
+				<!-- Placeholder -->
+				</div>
+			</div>
+		</div>
     </div>
 </div>
 <div id="cover">
@@ -2030,7 +2112,7 @@
 	});
 	
 	byId('index').style.display = "inline";
-		
+	
 	function showLoader(show){
 		if (show == 'true') {
 			byId('cover').classList.add("cover_active");
@@ -2470,7 +2552,21 @@
 			}
 		})
 	}   
-  
+	
+	var api_sw = 'checkVersion.php?api_token=' + GET('api_token');
+	loadSwData();
+	function loadSwData(){
+		updateHelp = '<br><b>Die Software auf deinem WLANThermo Nano ist veraltet.</b><br><br>Bitte führe ein Online-Update der Software durch, indem du im Webinterface (nicht in der Cloud!) rechts oben auf den Update-Hinweis klickst (gelbes Ausrufezeichen) und bestätigst.<br>Das Update dauert weniger als 3 Minuten.<br>Vielen Dank!<br><br><b>Hinweis:</b><br>Sollte kein Update-Hinweis vorhanden sein, ist die Software auf deinem WLANThermo Nano so alt, dass du das Online-Update manuell einleiten musst.<br>Hierfür rufst du im Browser bitte die Seite <b>IPdeinesNano/update</b> auf, gibst dort "<b>v1.0.4</b>" ohne die Anführungszeichen ein und startest das Update.<br><br>Informationen zum Update findest du in unserem WLANThermo Forum: <a style="color:red" href="https://forum.wlanthermo.de"><b>Link</b></a><br>Hier kannst du auch Fragen zum Online-Update stellen, die wir dir gerne beantworten werden.<br><br>Dein WLANThermo Team';
+		loadJSON(api_sw, '', '10000', function (response) {
+			if (response == 'false'){
+				//alert('kein Update');
+			}else{
+				setHelpBox('ACHTUNG!',updateHelp);
+				//alert('Update');
+			}
+		})
+	}  
+	
 	function addData(timestamp,jr,update){
 		nanoChart.data.labels.push(timestamp);
 		var i;
@@ -2541,6 +2637,12 @@
 			return "rgb(" + r + ", " + g + ", " + b + ")";
 		}
 	}
+	function setHelpBox(title,v){	
+		byId('helpBoxTitle').innerHTML = title;
+		document.getElementById("helpBoxObject").innerHTML = v;
+		byId('helpBox').style.display= 'block';
+	}
+	
 readTemp();	
 <!-- loadChartData();	 -->
 </script>

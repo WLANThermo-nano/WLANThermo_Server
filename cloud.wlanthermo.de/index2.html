@@ -703,13 +703,23 @@
 				padding:.2em 0 .8em
 			}
 		}
-		
+		@media only screen{
+			.showChart{
+				display:none;
+			}
+			.chart_visibility{
+				display:inline;
+			}
+		}
 		@media only screen and (max-width :480px) and (orientation: portrait){
 			#temp_channel{
 				display:inline;
 			}
-			#chart_container{
+			.chart_visibility{
 				display:none;
+			}
+			.showChart{
+				display:inline;
 			}
 		}
 
@@ -717,8 +727,11 @@
 			#temp_channel{
 				display:none;
 			}
-			#chart_container{
+			.chart_visibility{
 				display:inline;
+			}
+			.showChart{
+				display:none;
 			}
 		}
 
@@ -1001,7 +1014,7 @@
 		.float-left {
 			float:left;
 		}
-		.wifi, .notification {
+		.wifi, .notification, .showChart {
 			text-align:center;
 			padding:14px 2px;
 			overflow: hidden;;
@@ -1267,7 +1280,7 @@
 			}
 		}
 
-		.notification:hover, .wifi:hover, .battery:hover{
+		.notification:hover, .wifi:hover, .battery:hover, .showChart{
 			cursor: pointer;
 		}
 
@@ -1860,6 +1873,7 @@
 		<div id="thermoname"></div>
 		<div class="battery" onclick="setshowBatteryWlanIcon();"></div>
 		<div class="wifi" onclick="setshowBatteryWlanIcon();"></div>
+		<div class="showChart" onclick="showChart();"><span class="icon-stats-dots"> </span></div>
 		<div class="notification" style="display:none" onclick="update();"><span class="icon-notification"> </span></div>
 	</div>
 	<div class="clear"></div>
@@ -1903,8 +1917,7 @@
 			</div>
 		</div> 
 
-		<div id="chart_wrapper">
-			<div id="chart_container" class="pure-u-1-1 pure-u-lg-1-1">
+			<div id="chart_container" class="pure-u-1-1 pure-u-lg-1-1 chart_visibility">
 				<div class="1-box chart_container">	
 					 <div class="dropdown"> 
 					  <div class="dropbtn"><span class="icon-reorder icon-white"></span></div>
@@ -1916,7 +1929,6 @@
 					<canvas id="nanoChart"></canvas>
 				</div>
 			</div>
-		</div>
 		<!-- ################################################### -->
 
 		<div id="about" class="content" style="display:none">
@@ -2030,7 +2042,12 @@
 	});
 	
 	byId('index').style.display = "inline";
-		
+	function showChart(){
+		chart_container.classList.toggle("chart_visibility");
+	<!-- div.classList.remove("foo"); -->
+	<!-- div.classList.add("anotherclass"); -->
+	}
+	
 	function showLoader(show){
 		if (show == 'true') {
 			byId('cover').classList.add("cover_active");
