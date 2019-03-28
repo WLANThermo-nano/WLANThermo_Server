@@ -1,5 +1,9 @@
 <?php
-define('BOT_TOKEN', '749425782:AAHPoYxxtDaMOKPlheJnM2cfT-S_dCbiQ4Q');
+// include database config
+require_once("../config.inc.php"); // 
+//-----------------------------------------------------------------------------
+
+define('BOT_TOKEN', $telegram_bot_api);
 define('API_URL', 'https://api.telegram.org/bot'.BOT_TOKEN.'/');
 function apiRequestWebhook($method, $parameters) {
   if (!is_string($method)) {
@@ -100,7 +104,7 @@ function processMessage($message) {
     // incoming text message
     $text = $message['text'];
     if (strpos($text, "/start") === 0) {
-      apiRequestJson("sendMessage", array('chat_id' => $chat_id, "text" => 'Hello', 'reply_markup' => array(
+      apiRequestJson("sendMessage", array('chat_id' => $chat_id, "text" => 'Hallo, deine ChatID lautet: '.$chat_id.'', 'reply_markup' => array(
         'keyboard' => array(array('ChatID', 'Hi')),
         'one_time_keyboard' => true,
         'resize_keyboard' => true)));

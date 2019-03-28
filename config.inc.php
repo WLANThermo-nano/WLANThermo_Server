@@ -6,4 +6,8 @@ $db_user = "*****"; // Benutzername
 $db_pass = "*****"; // Kennwort
 $db_name = "*****"; // Name der Datenbank
 
+/* TOKEN für Telegram BOT */
+
+$telegram_bot_api = "*****"; // Telegram API
+
 ?>
