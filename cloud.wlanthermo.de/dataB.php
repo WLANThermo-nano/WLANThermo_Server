@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 $logfile = '_getData.log'; // global var for logger class filename
 $logpath = '../logs/';  // global var for logger class filepath
 require_once("../include/logger.php");
-require_once("../../config.inc.php");
+require_once("../config.inc.php");
 /* @author Florian Riedl
  */	
 
@@ -28,9 +28,9 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	}
 	if(isset($_GET['chartHistory'])){
 		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
-			$result = "".$_GET['callback']."('" . getHistory($dbh,$_GET['api_token'],$history_time) . "');";	// Look for Device into Database	
+			$result = "".$_GET['callback']."('" . getData($dbh,$_GET['api_token'],$history_time) . "');";	// Look for Device into Database	
 		}else{
-			$result = getHistory($dbh,$_GET['api_token'],$history_time); // Look for Device into Database	
+			$result = getData($dbh,$_GET['api_token'],$history_time); // Look for Device into Database	
 		}
 		if($result === false){
 			die('false');
@@ -39,7 +39,7 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 		}	
 	}else if(isset($_GET['chartCSV'])){
 		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
-			$result = "".$_GET['callback']."('" . getHistory($dbh,$_GET['api_token'],$history_time) . "');";	// Look for Device into Database	
+			$result = "".$_GET['callback']."('" . getData($dbh,$_GET['api_token'],$history_time) . "');";	// Look for Device into Database	
 		}else{
 			$result = getCSV($dbh,$_GET['api_token'],$history_time); // Look for Device into Database	
 		}
@@ -50,9 +50,9 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 		}		
 	}else{
 		if (isset($_GET['callback']) AND !empty($_GET['callback'])){
-			$result = "".$_GET['callback']."(" . getData($dbh,$_GET['api_token']) . ");";
+			$result = "".$_GET['callback']."(" . getLastData($dbh,$_GET['api_token']) . ");";
 		}else{
-			$result = getData($dbh,$_GET['api_token']); // Look for Device into Database				
+			$result = getLastData($dbh,$_GET['api_token']); // Look for Device into Database				
 		}
 		if($result === false){
 			if (isset($_GET['callback']) AND !empty($_GET['callback'])){
@@ -71,6 +71,23 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	}
 	$dbh = null; //Datenbankverbindung schließen
 
+}else if (isset($_GET['history_token']) AND !empty($_GET['history_token'])){
+	try {
+		//SimpleLogger::info("Connecting to the database...\n");
+		$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
+		$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
+		$dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING );
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
+	}
+	$result = getHistory($dbh,$_GET['history_token']);	
+	if($result === false){
+		die('false');
+	}else{
+		echo $result;
+	}		
 }else{
 	die('false');
 }
@@ -79,7 +96,7 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 // Functions ----------------------------------------------------------------------------------
 // ############################################################################################
 
-function getData($dbh,$api_token){
+function getLastData($dbh,$api_token){
 	try {
 		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token ORDER BY id DESC LIMIT 1";
 		$statement = $dbh->prepare($sql);
@@ -105,8 +122,9 @@ function getData($dbh,$api_token){
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		die('false');
 	}
-}	
-function getHistory($dbh,$api_token,$api_time){
+}
+
+function getData1($dbh,$api_token,$api_time){
 	try {
 		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
 		$statement = $dbh->prepare($sql);
@@ -155,11 +173,98 @@ function getHistory($dbh,$api_token,$api_time){
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		die('false');
 	}
+}
+
+function getData($dbh,$api_token,$api_time){
+	try {
+		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':api_token', $api_token);
+		$statement->bindValue(':history_time', $api_time);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		$tmp = array();
+		$data = array();
+		SimpleLogger::debug($c);
+		if ($statement->rowCount() > 0) {
+			$numItems = $statement->rowCount() - 1;
+			foreach($statement as $key => $daten) {
+				$obj = json_decode( $daten['data'], true );
+				if($key == $numItems){
+					$data['header']['ts_stop'] = $obj['system']['time'];
+					$arr = $obj;
+					if(isset($obj['pitmaster'])){	
+						if(!isAssoc($obj['pitmaster'])){
+							unset($arr['pitmaster']);
+							$arr['pitmaster'][0] = $obj['pitmaster'];
+						}
+					}					
+					$data['last_data'] = $arr;
+					
+				} else {
+					if($key == 0){
+						$data['header']['ts_start'] = $obj['system']['time'];
+					}
+					if ($obj === null && json_last_error() !== JSON_ERROR_NONE) {
+					}else{
+						$arr = array(); 
+						$arr['system']['time'] = $obj['system']['time'];
+						$arr['system']['soc'] = $obj['system']['soc'];
+						foreach ( $obj['channel'] as $key => $value )
+						{
+							$arr['channel'][$key]['temp'] = $value['temp'];
+						}
+						if(isAssoc($obj['pitmaster'])){
+							foreach ($obj['pitmaster'] as $key => $value)
+							{	
+								$arr['pitmaster'][$key]['value'] = $value['value'];
+								$arr['pitmaster'][$key]['set'] = $value['set'];
+								$arr['pitmaster'][$key]['typ'] = $value['typ'];
+							}					
+						}else{
+							$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
+							$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
+							$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+						}
+						array_push($tmp, $arr);
+					}						// not last element
+				}
+			}		
+			$data['data'] = $tmp;
+			return(json_encode($data));
+		} else {
+			return false;
+		}
+		
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (getHistory)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
+	}
+}
+
+function getHistory($dbh,$history_token){
+	try {
+		$sql = "SELECT data FROM `history` WHERE api_token= :api_token ORDER BY id DESC LIMIT 1";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':api_token', $history_token);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);		
+		if ($statement->rowCount() > 0) {
+			return($statement->fetch()['data']);
+		} else {
+		  return false;
+		}
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (getHistory)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
+	}
 }	
 
 function getCSV($dbh,$api_token,$api_time){
-	//echo jsonToCsv(getHistory($dbh,$api_token,$api_time));
-	// return jsonToCsv(getHistory($dbh,$api_token,$api_time));
+	//echo jsonToCsv(getData($dbh,$api_token,$api_time));
+	// return jsonToCsv(getData($dbh,$api_token,$api_time));
 	try {
 		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
 		$statement = $dbh->prepare($sql);

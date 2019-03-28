@@ -1,13 +1,12 @@
 <?php
 error_reporting(E_ALL);
-require_once("/var/www/virtual/nano/config.inc.php");
+require_once("/var/www/vhosts/h2777508.stratoserver.net/config.inc.php");
 /* @author Florian Riedl
  *
  */	
 
 SimpleLogger::info("------------------------------------------------------------\n");
 SimpleLogger::info("starting clean process...\n");
-$githubApiUrl = 'https://api.github.com/repos/WLANThermo-nano/WLANThermo_nano_Software/releases';
 
 // Connecting to database
 try {
@@ -133,7 +132,7 @@ class SimpleLogger
 	  case self::ALERT:    $levelStr = "ALERT"; break;
 	  case self::EMERGENCY:$levelStr = "EMERG"; break;
 	}
-	$filePath = 'html/logs/'.strftime("%Y-%m").'_cleanCloudDB.log';
+	$filePath = '/var/www/vhosts/h2777508.stratoserver.net/logs/'.strftime("%Y-%m").'_cleanCloudDB.log';
 	$fd = fopen ( $filePath, $mode );
 	if ($fd)
 	{

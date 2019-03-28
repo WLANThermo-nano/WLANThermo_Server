@@ -371,12 +371,20 @@ function insertHistoryData($dbh,$JsonArr){
 		$data = array();
 		SimpleLogger::debug($c);
 		if ($statement->rowCount() > 0) {
-			$numItems = $statement->rowCount();
+			$numItems = $statement->rowCount() - 1;
 			foreach($statement as $key => $daten) {
 				$obj = json_decode( $daten['data'], true );
-				if($numItems = $key){ 
+				if($key == $numItems){
 					$data['header']['ts_stop'] = $obj['system']['time'];
-					$data['last_data'] = $obj;
+					$arr = $obj;
+					if(isset($obj['pitmaster'])){	
+						if(!isAssoc($obj['pitmaster'])){
+							unset($arr['pitmaster']);
+							$arr['pitmaster'][0] = $obj['pitmaster'];
+						}
+					}					
+					$data['last_data'] = $arr;
+					
 				} else {
 					if($key == 0){
 						$data['header']['ts_start'] = $obj['system']['time'];
