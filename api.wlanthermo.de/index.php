@@ -1,9 +1,9 @@
 <?php
  /*************************************************** 
-    Copyright (C) 2018  Florian Riedl
+    Copyright (C) 2019  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 0.3, 29/12/18
+		@version 0.4, 28/03/19
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,9 +27,12 @@
  $time_start = microtime(true);
 //-----------------------------------------------------------------------------
 // include Logging libary 
-$logfile = '_api.log'; // global var for logger class filename
-$logpath = '../logs/';  // global var for logger class filepath
-require_once("../include/logger.php"); // logger class
+//$logfile = '_api.log'; // global var for logger class filename
+//$logpath = '../logs/';  // global var for logger class filepath
+require_once("../include/SimpleLogger.php"); // logger class
+SimpleLogger::$filePath = '../logs/api.wlanthermo.de/api_'.strftime("%Y-%m-%d").'.log';
+SimpleLogger::$debug = false;
+
 //-----------------------------------------------------------------------------
 // include database config
 require_once("../config.inc.php"); // 
@@ -38,7 +41,7 @@ require_once("../config.inc.php"); //
 $test = '{
 	"device": {
 		"device": "nano",
-		"serial": "84d1ac",
+		"serial": "xxxxxx",
 		"hw_version": "1",
 		"sw_version": "v0.9.7"
 	},
@@ -58,6 +61,9 @@ $test = '{
 		"services": [{
 			"service": "telegram",
 			"key1": "xxx",
+			"key2": "xxx"
+		},{
+			"service": "telegram-bot",
 			"key2": "xxx"
 		},{
 			"service": "pushover",
@@ -100,6 +106,7 @@ $test = '{
 //-----------------------------------------------------------------------------
 // read post data
 $json = file_get_contents('php://input');
+//SimpleLogger::debug("".$json."\n");
 // define json array
 $JsonArr = array();
 // decode post data to json
@@ -107,7 +114,7 @@ $JsonArr = json_decode( $json, true );
 // check json error
 if ($JsonArr === null && json_last_error() !== JSON_ERROR_NONE) {
     SimpleLogger::error("JSON invalide\n");
-	SimpleLogger::debug("".$json."\n");
+	SimpleLogger::dump($json . "\n");
 	die(false);
 }
 //-----------------------------------------------------------------------------
@@ -145,7 +152,7 @@ if(checkDeviceJson($JsonArr)){
 			}
 		}
 	}else{
-		SimpleLogger::error("An error has occurred - (createUpdateJson)\n");
+		SimpleLogger::error("An error has occurred - (checkDeviceDatabase)\n");
 		die(false);		
 	}	
 	$JsonArr['runtime'] = (microtime(true) - $time_start);
@@ -174,12 +181,18 @@ function checkDeviceJson($JsonArr){
 
 function checkDeviceDatabase($dbh,$JsonArr){
 	try {
-		$sql = "INSERT INTO `devices` (`device`,`serial`, `name`, `hardware_version`, `software_version`, `update_active`, `whitelist`) 
-				VALUES (:device, :serial, :name, :hardware_version, :software_version, :update_active, :whitelist) 
-				ON DUPLICATE KEY UPDATE device=VALUES(device), hardware_version=VALUES(hardware_version), software_version=VALUES(software_version)";
+		
+		if(!isset($JsonArr['device']['item'])){
+			$JsonArr['device']['item'] = null;
+		}
+		
+		$sql = "INSERT INTO `devices` (`device`,`serial`,`item`, `name`, `hardware_version`, `software_version`, `update_active`, `whitelist`) 
+				VALUES (:device, :serial,:item, :name, :hardware_version, :software_version, :update_active, :whitelist) 
+				ON DUPLICATE KEY UPDATE device=VALUES(device),item=VALUES(item), hardware_version=VALUES(hardware_version), software_version=VALUES(software_version)";
 		$statement = $dbh->prepare($sql);
 		$statement->bindValue(':device', $JsonArr['device']['device']);
 		$statement->bindValue(':serial', $JsonArr['device']['serial']);
+		$statement->bindValue(':item', $JsonArr['device']['item']);
 		$statement->bindValue(':name', '');
 		$statement->bindValue(':hardware_version', $JsonArr['device']['hw_version']);
 		$statement->bindValue(':software_version', $JsonArr['device']['sw_version']);
@@ -220,7 +233,7 @@ function createUpdateJson($dbh,$JsonArr){
 		}	
 }
 //-----------------------------------------------------------------------------
-function checkCloudJson($dbh,$JsonArr){
+function checkCloudJson($JsonArr){
 	if (isset($JsonArr['cloud']['task']) AND !empty($JsonArr['cloud']['task']) AND isset($JsonArr['cloud']['api_token']) AND !empty($JsonArr['cloud']['api_token'])){
 		return true;
 	}else{
@@ -229,7 +242,7 @@ function checkCloudJson($dbh,$JsonArr){
 }
 
 function createCloudJson($dbh,$JsonArr){
-	if(checkCloudJson){
+	if(checkCloudJson($JsonArr) === true){
 		switch ($JsonArr['cloud']['task']) {
 			case 'save':
 				if (insertCloudData($dbh,$JsonArr)){
@@ -559,15 +572,10 @@ function checkNotificationJson($dbh,$JsonArr){
 }
 
 function createNotificationJson($JsonArr){
-	if(checkCloudJson){
-		switch ($JsonArr['notification']['task']) {
-			case 'alert':
-				sendNotification($JsonArr);
-				break;
-		}
-	}else{
-		//$JsonArr['cloud']['task'] = 'false';	
-		//SimpleLogger::debug("Json false - ".json_encode($JsonArr['cloud'], JSON_UNESCAPED_SLASHES)."(createUpdateJson)\n");
+	switch ($JsonArr['notification']['task']) {
+		case 'alert':
+			sendNotification($JsonArr);
+			break;
 	}
 	return $JsonArr;
 }
@@ -604,7 +612,7 @@ function getMsg($JsonArr){
 	
 	
 	switch ($JsonArr['notification']['lang']) {
-		case de:
+		case 'de':
 			if($JsonArr['notification']['message'] == 'up'){
 			return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'down'){
@@ -615,7 +623,7 @@ function getMsg($JsonArr){
 				return $de_alert_test;
 			}
 			break;
-		case en:
+		case 'en':
 			if($JsonArr['notification']['message'] == 'up'){
 				return sprintf($en_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'down'){
