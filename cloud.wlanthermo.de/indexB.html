@@ -721,6 +721,16 @@
 				display:inline;
 			}
 		}
+		
+		/* Landscape Apple Watch */ 
+		@media only screen and (max-width: 320px){ 
+			#temp_channel{
+				display:inline;
+			}
+			#chart_container{
+				display:none;
+			}			
+		}
 
 		.pure-menu-fixed {
 			position:fixed;
@@ -2059,7 +2069,7 @@
 		return HTTP_GET_VARS[v];
 	}
 	// Debug Mode
-	var debug = false;
+	var debug = true;
 	if(GET('debug') == 'true'){
 		if(debug === true){console.log('Debug Mode active');}
 		debug = true;
@@ -2403,8 +2413,10 @@
 				data: []
 			});		
 		}
-		chart_datasets = new Array(count).fill(null);
-		if(debug === true){console.log(count)}	
+		
+		//chart_datasets = new Array(count).fill(null);	// ie11 does not support
+		chart_datasets = new Array(count + 1).join(null).split('');
+		if(debug === true){console.log(count)}
 		myChartConfig = {
 			type: 'line',
 			data: {
