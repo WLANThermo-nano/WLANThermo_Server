@@ -1,9 +1,9 @@
 <?php
  /*************************************************** 
-    Copyright (C) 2018  Florian Riedl
+    Copyright (C) 2019  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 0.3, 29/12/18
+		@version 0.4, 28/03/19
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,9 +27,12 @@
  $time_start = microtime(true);
 //-----------------------------------------------------------------------------
 // include Logging libary 
-$logfile = '_api.log'; // global var for logger class filename
-$logpath = '../logs/';  // global var for logger class filepath
-require_once("../include/logger.php"); // logger class
+//$logfile = '_api.log'; // global var for logger class filename
+//$logpath = '../logs/';  // global var for logger class filepath
+require_once("../include/SimpleLogger.php"); // logger class
+SimpleLogger::$filePath = '../logs/api.wlanthermo.de/api_'.strftime("%Y-%m-%d").'.log';
+SimpleLogger::$debug = false;
+
 //-----------------------------------------------------------------------------
 // include database config
 require_once("../config.inc.php"); // 
@@ -38,7 +41,7 @@ require_once("../config.inc.php"); //
 $test = '{
 	"device": {
 		"device": "nano",
-		"serial": "84d1ac",
+		"serial": "xxxxxx",
 		"hw_version": "1",
 		"sw_version": "v0.9.7"
 	},
@@ -58,6 +61,9 @@ $test = '{
 		"services": [{
 			"service": "telegram",
 			"key1": "xxx",
+			"key2": "xxx"
+		},{
+			"service": "telegram-bot",
 			"key2": "xxx"
 		},{
 			"service": "pushover",
@@ -100,6 +106,7 @@ $test = '{
 //-----------------------------------------------------------------------------
 // read post data
 $json = file_get_contents('php://input');
+//SimpleLogger::debug("".$json."\n");
 // define json array
 $JsonArr = array();
 // decode post data to json
@@ -107,7 +114,7 @@ $JsonArr = json_decode( $json, true );
 // check json error
 if ($JsonArr === null && json_last_error() !== JSON_ERROR_NONE) {
     SimpleLogger::error("JSON invalide\n");
-	SimpleLogger::debug("".$json."\n");
+	SimpleLogger::dump($json . "\n");
 	die(false);
 }
 //-----------------------------------------------------------------------------
@@ -123,38 +130,40 @@ if(checkDeviceJson($JsonArr)){
 		SimpleLogger::error("Database - An error has occurred\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		die('false');
-	}
-	
-	foreach($JsonArr as $key => $value){
-		switch ($key) {
-			case 'update':	
-				$JsonArr = createUpdateJson($dbh,$JsonArr);
-				break;
-			case 'cloud':
-				$JsonArr = createCloudJson($dbh,$JsonArr);
-				break;
-			case 'history':
-				$JsonArr = createHistoryJson($dbh,$JsonArr);
-				break;
-			case 'notification':
-				$JsonArr = createNotificationJson($JsonArr);
-				break;
-			case 'alexa':
-				$JsonArr = createAlexaJson($dbh,$JsonArr);
-				break;
+	}	
+	if(checkDeviceDatabase($dbh,$JsonArr)){
+		if($JsonArr['device']['serial'] == 'd86e53'){
+			die("Unable to connect");
 		}
-	}
+		foreach($JsonArr as $key => $value){
+			switch ($key) {
+				case 'update':	
+					$JsonArr = createUpdateJson($dbh,$JsonArr);
+					break;
+				case 'cloud':
+					$JsonArr = createCloudJson($dbh,$JsonArr);
+					break;
+				case 'history':
+					$JsonArr = createHistoryJson($dbh,$JsonArr);
+					break;
+				case 'notification':
+					$JsonArr = createNotificationJson($JsonArr);
+					break;
+				case 'alexa':
+					$JsonArr = createAlexaJson($dbh,$JsonArr);
+					break;
+			}
+		}
+	}else{
+		SimpleLogger::error("An error has occurred - (checkDeviceDatabase)\n");
+		die(false);		
+	}	
 	$JsonArr['runtime'] = (microtime(true) - $time_start);
 	$json = json_encode($JsonArr, JSON_UNESCAPED_SLASHES);	
 	header('Access-Control-Allow-Origin: *'); 
-	//header('Content-type: text/html; charset=utf-8');
+	// header('Access-Control-Allow-Headers', 'Content-Type');
 	header('Content-Type: application/json');
-	//header("Transfer-encoding: chunked");
-
 	header("Content-Length: ".strlen($json));
-	//	flush();
-	//	ob_flush();
-	//dump_chunk($json);
 	echo $json;	
 }else{
 	SimpleLogger::error("(checkDeviceJson) JSON device bad\n");
@@ -173,15 +182,42 @@ function checkDeviceJson($JsonArr){
 	}
 }
 
-function dump_chunk($chunk)
-{
-    echo sprintf("%x\r\n", strlen($chunk));
-    echo $chunk;
-    echo "\r\n";
+function checkDeviceDatabase($dbh,$JsonArr){
+	try {
+		
+		if(!isset($JsonArr['device']['item'])){
+			$JsonArr['device']['item'] = null;
+		}
+		
+		$sql = "INSERT INTO `devices` (`device`,`serial`,`item`, `name`, `hardware_version`, `software_version`, `update_active`, `whitelist`) 
+				VALUES (:device, :serial,:item, :name, :hardware_version, :software_version, :update_active, :whitelist) 
+				ON DUPLICATE KEY UPDATE device=VALUES(device),item=VALUES(item), hardware_version=VALUES(hardware_version), software_version=VALUES(software_version)";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':device', $JsonArr['device']['device']);
+		$statement->bindValue(':serial', $JsonArr['device']['serial']);
+		$statement->bindValue(':item', $JsonArr['device']['item']);
+		$statement->bindValue(':name', '');
+		$statement->bindValue(':hardware_version', $JsonArr['device']['hw_version']);
+		$statement->bindValue(':software_version', $JsonArr['device']['sw_version']);
+		$statement->bindValue(':update_active', '1');
+		$statement->bindValue(':whitelist', '0');
+		$inserted = $statement->execute();
+		if($inserted){
+			return true;
+		}else{
+			return false;
+		}
+		$statement = null;
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (checkDeviceDatabase)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		die('false');
+	}
 }
+//-----------------------------------------------------------------------------
+
 
 function createUpdateJson($dbh,$JsonArr){
-	if(checkDeviceDatabase($dbh,$JsonArr)){
 		if (isset($JsonArr['update']['version'])){
 			$newVersion = checkVersion($dbh,$JsonArr);
 		}else{
@@ -197,15 +233,19 @@ function createUpdateJson($dbh,$JsonArr){
 		}else{
 			$JsonArr['update']['available'] = 'false';
 			return $JsonArr;
-		}
+		}	
+}
+//-----------------------------------------------------------------------------
+function checkCloudJson($JsonArr){
+	if (isset($JsonArr['cloud']['task']) AND !empty($JsonArr['cloud']['task']) AND isset($JsonArr['cloud']['api_token']) AND !empty($JsonArr['cloud']['api_token'])){
+		return true;
 	}else{
-		SimpleLogger::error("An error has occurred - (createUpdateJson)\n");
-		die(false);		
-	}	
+		return false;
+	}
 }
 
 function createCloudJson($dbh,$JsonArr){
-	if(checkCloudJson){
+	if(checkCloudJson($JsonArr) === true){
 		switch ($JsonArr['cloud']['task']) {
 			case 'save':
 				if (insertCloudData($dbh,$JsonArr)){
@@ -227,50 +267,6 @@ function createCloudJson($dbh,$JsonArr){
 	return $JsonArr;
 }
 
-function createHistoryJson($dbh,$JsonArr){
-	if (isset($JsonArr['history']['task']) AND !empty($JsonArr['history']['task'])){
-		switch ($JsonArr['history']['task']) {
-			case 'save':
-				if (isset($JsonArr['history']['api_token']) AND !empty($JsonArr['history']['api_token'])){			
-					if (insertHistoryData($dbh,$JsonArr)){
-						$JsonArr['history']['task'] = 'true';
-						unset($JsonArr['history']['data']);
-					}else{
-						$JsonArr['history']['task'] = 'false';
-						unset($JsonArr['history']['data']);
-					}
-				}else{
-					$JsonArr['history']['task'] = 'false';	
-					SimpleLogger::debug("Json false - ".json_encode($JsonArr['history'], JSON_UNESCAPED_SLASHES)."(createHistoryJson)\n");
-				}
-				break;
-			case 'read':
-				// todo
-				break;		
-		}
-	}else{
-		$JsonArr['history']['task'] = 'false';	
-		SimpleLogger::debug("Json false - ".json_encode($JsonArr['history'], JSON_UNESCAPED_SLASHES)."(createHistoryJson)\n");
-	}
-	return $JsonArr;
-}
-
-function checkCloudJson($dbh,$JsonArr){
-	if (isset($JsonArr['cloud']['task']) AND !empty($JsonArr['cloud']['task']) AND isset($JsonArr['cloud']['api_token']) AND !empty($JsonArr['cloud']['api_token'])){
-		return true;
-	}else{
-		return false;
-	}
-}
-	
-function checkNotificationJson($dbh,$JsonArr){
-	if (isset($JsonArr['notification']['task']) AND !empty($JsonArr['notification']['task'])){
-		return true;
-	}else{
-		return false;
-	}
-}
-		
 function insertCloudData($dbh,$JsonArr){	
 	if (isset($JsonArr['cloud']['data']) AND !empty($JsonArr['cloud']['data'])){
 		try {
@@ -293,64 +289,162 @@ function insertCloudData($dbh,$JsonArr){
 	}
 }
 
-function insertHistoryData($dbh,$JsonArr){	
-		try {
-		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
+//-----------------------------------------------------------------------------
+function createHistoryJson($dbh,$JsonArr){
+	if (isset($JsonArr['history']['task']) AND !empty($JsonArr['history']['task'])){
+		switch ($JsonArr['history']['task']) {
+			case 'save':
+				if (isset($JsonArr['history']['api_token']) AND !empty($JsonArr['history']['api_token'])){			
+					if (insertHistoryData($dbh,$JsonArr)){
+						$JsonArr['history']['task'] = 'true';
+					}else{
+						$JsonArr['history']['task'] = 'false';
+					}
+				}else{
+					$JsonArr['history']['task'] = 'false';	
+					SimpleLogger::debug("Json false - ".json_encode($JsonArr['history'], JSON_UNESCAPED_SLASHES)."(createHistoryJson)\n");
+				}
+				break;
+			case 'read':
+				$tmp = readHistoryData($dbh,$JsonArr);
+				if ($tmp == false){
+						$JsonArr['history']['task'] = 'false';
+					}else{
+						$JsonArr['history']['task'] = 'true';
+						$JsonArr['history']['list'] = $tmp;
+				}
+				break;	
+			case 'delete':
+				$tmp = deleteHistoryData($dbh,$JsonArr);
+				if ($tmp == false){
+						$JsonArr['history']['task'] = 'false';
+					}else{
+						$JsonArr['history']['task'] = 'true';
+				}
+				break;				
+		}
+	}else{
+		$JsonArr['history']['task'] = 'false';	
+		SimpleLogger::debug("Json false - ".json_encode($JsonArr['history'], JSON_UNESCAPED_SLASHES)."(createHistoryJson)\n");
+	}
+	return $JsonArr;
+}
+
+function readHistoryData($dbh,$JsonArr){	
+	try {
+		$tmp = array();
+		$sql = "SELECT api_token, ts_start, ts_stop FROM `history` WHERE serial= :serial order by `id` desc";
 		$statement = $dbh->prepare($sql);
-		$statement->bindValue(':api_token', $api_token);
+		$statement->bindValue(':serial', $JsonArr['device']['serial']);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		if ($statement->rowCount() > 0) {
+			foreach($statement as $key => $daten) {
+				array_push($tmp, $daten);
+			}
+			return $tmp;
+		}else{
+			return false;	
+		}
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (readHistoryData)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		return false;
+	}
+}
+
+function deleteHistoryData($dbh,$JsonArr){	
+	try {
+		$tmp = array();
+		$sql = "DELETE FROM `history` WHERE api_token= :api_token";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':api_token', $JsonArr['history']['api_token']);
+		$statement->execute();
+		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		if ($statement->rowCount() > 0) {
+			return true;
+		}else{
+			return false;	
+		}
+	} catch (PDOException $e) {
+		SimpleLogger::error("An error has occurred - (readHistoryData)\n");
+		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
+		return false;
+	}
+}
+		
+function insertHistoryData($dbh,$JsonArr){	
+	try {
+		$api_time = '24';
+		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND serial= :serial AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
+		$statement = $dbh->prepare($sql);
+		$statement->bindValue(':api_token', $JsonArr['history']['api_token']);
+		$statement->bindValue(':serial', $JsonArr['device']['serial']);
 		$statement->bindValue(':history_time', $api_time);
 		$statement->execute();
 		$statement->setFetchMode(PDO::FETCH_ASSOC);
+		$tmp = array();
 		$data = array();
+		SimpleLogger::debug($c);
 		if ($statement->rowCount() > 0) {
-			foreach($statement as $daten) {
+			$numItems = $statement->rowCount() - 1;
+			foreach($statement as $key => $daten) {
 				$obj = json_decode( $daten['data'], true );
-				if ($obj === null && json_last_error() !== JSON_ERROR_NONE) {
-					//ToDo Error Hadling
-				}else{
-					$arr = array(); 
-					$arr['system']['time'] = $obj['system']['time'];
-					$arr['system']['soc'] = $obj['system']['soc'];
-					foreach ( $obj['channel'] as $key => $value )
-					{
-						$arr['channel'][$key]['temp'] = $value['temp'];
+				if($key == $numItems){
+					$data['header']['ts_stop'] = $obj['system']['time'];
+					$arr = $obj;
+					if(isset($obj['pitmaster'])){	
+						if(!isAssoc($obj['pitmaster'])){
+							unset($arr['pitmaster']);
+							$arr['pitmaster'][0] = $obj['pitmaster'];
+						}
+					}					
+					$data['last_data'] = $arr;
+					
+				} else {
+					if($key == 0){
+						$data['header']['ts_start'] = $obj['system']['time'];
 					}
-					if(isAssoc($obj['pitmaster'])){
-						foreach ($obj['pitmaster'] as $key => $value)
-						{
-							$arr['pitmaster'][$key]['value'] = $value['value'];
-							$arr['pitmaster'][$key]['set'] = $value['set'];
-							$arr['pitmaster'][$key]['typ'] = $value['typ'];
-						}					
+					if ($obj === null && json_last_error() !== JSON_ERROR_NONE) {
 					}else{
-						$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
-						$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
-						$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
-					}
-					array_push($data, $arr);
+						$arr = array(); 
+						$arr['system']['time'] = $obj['system']['time'];
+						$arr['system']['soc'] = $obj['system']['soc'];
+						foreach ( $obj['channel'] as $key => $value )
+						{
+							$arr['channel'][$key]['temp'] = $value['temp'];
+						}
+						if(isAssoc($obj['pitmaster'])){
+							foreach ($obj['pitmaster'] as $key => $value)
+							{	
+								$arr['pitmaster'][$key]['value'] = $value['value'];
+								$arr['pitmaster'][$key]['set'] = $value['set'];
+								$arr['pitmaster'][$key]['typ'] = $value['typ'];
+							}					
+						}else{
+							$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
+							$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
+							$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+						}
+						array_push($tmp, $arr);
+					}						// not last element
 				}
-			}
-			$sql = "INSERT INTO `history` (`data`) VALUES (:data)";
+			}		
+			$data['data'] = $tmp;
+			//array_unshift($data, $data['settings']);
+			$sql = "INSERT INTO `history` (`api_token`,`serial`,`ts_start`,`ts_stop`,`data`) VALUES (:api_token, :serial, :ts_start, :ts_stop, :data)";
 			$statement = $dbh->prepare($sql);			
 			$statement->bindValue(':data', json_encode($data, JSON_UNESCAPED_SLASHES));
+			$statement->bindValue(':serial', $JsonArr['device']['serial']);
+			$statement->bindValue(':api_token', guidv4());
+			$statement->bindValue(':ts_start', $data['header']['ts_start']);
+			$statement->bindValue(':ts_stop', $data['header']['ts_stop']);
 			$statement->execute();
-				
+			return true;	
 				//return(json_encode($data));
 		} else {
 			return false;
-		}
-
-		
-		$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`) VALUES (:serial, :api_token, :data)";
-		$statement = $dbh->prepare($sql);
-		$statement->bindValue(':serial', $JsonArr['device']['serial']);
-		$statement->bindValue(':api_token', $JsonArr['cloud']['api_token']);
-		foreach($JsonArr['cloud']['data'] as $key => $data){			
-			$statement->bindValue(':data', json_encode($data, JSON_UNESCAPED_SLASHES));
-			$statement->execute();
 		}	
-		
-		return true;
 	} catch (PDOException $e) {
 		SimpleLogger::error("An error has occurred - (insertHistoryData)\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
@@ -358,32 +452,7 @@ function insertHistoryData($dbh,$JsonArr){
 	}
 }
 
-function checkDeviceDatabase($dbh,$JsonArr){
-	try {
-		$sql = "INSERT INTO `devices` (`device`,`serial`, `name`, `hardware_version`, `software_version`, `update_active`, `whitelist`) 
-				VALUES (:device, :serial, :name, :hardware_version, :software_version, :update_active, :whitelist) 
-				ON DUPLICATE KEY UPDATE device=VALUES(device), hardware_version=VALUES(hardware_version), software_version=VALUES(software_version)";
-		$statement = $dbh->prepare($sql);
-		$statement->bindValue(':device', $JsonArr['device']['device']);
-		$statement->bindValue(':serial', $JsonArr['device']['serial']);
-		$statement->bindValue(':name', '');
-		$statement->bindValue(':hardware_version', $JsonArr['device']['hw_version']);
-		$statement->bindValue(':software_version', $JsonArr['device']['sw_version']);
-		$statement->bindValue(':update_active', '1');
-		$statement->bindValue(':whitelist', '0');
-		$inserted = $statement->execute();
-		if($inserted){
-			return true;
-		}else{
-			return false;
-		}
-		$statement = null;
-	} catch (PDOException $e) {
-		SimpleLogger::error("An error has occurred - (checkDeviceDatabase)\n");
-		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
-		die('false');
-	}
-}
+//-----------------------------------------------------------------------------
 
 function checkNewUpdate($dbh,$JsonArr){
 	try {
@@ -435,13 +504,21 @@ function checkVersion($dbh,$JsonArr){
 		return('false');
 	}	
 }
-//-----------------------------------------------------------------------------
+
 // compare version numbers
 function compareVersion($dbVersion, $deviceVersion){
 	if (version_compare($dbVersion, $deviceVersion, ">")) {
 		return $dbVersion;
 	}else{
 		return('false');
+	}
+}
+//-----------------------------------------------------------------------------
+function checkAlexaJson($JsonArr){
+	if (isset($JsonArr['alexa']['task']) AND !empty($JsonArr['alexa']['task'])){
+		return true;
+	}else{
+		return false;
 	}
 }
 
@@ -472,14 +549,6 @@ function createAlexaJson($dbh,$JsonArr){
 	return $JsonArr;	
 }
 
-function checkAlexaJson($JsonArr){
-	if (isset($JsonArr['alexa']['task']) AND !empty($JsonArr['alexa']['task'])){
-		return true;
-	}else{
-		return false;
-	}
-}
-
 function insertAlexaKey($dbh,$JsonArr){
 	try {			
 		$sql = "UPDATE `devices` 
@@ -496,17 +565,20 @@ function insertAlexaKey($dbh,$JsonArr){
 		return false;
 	}
 }
+//-----------------------------------------------------------------------------
+function checkNotificationJson($dbh,$JsonArr){
+	if (isset($JsonArr['notification']['task']) AND !empty($JsonArr['notification']['task'])){
+		return true;
+	}else{
+		return false;
+	}
+}
 
 function createNotificationJson($JsonArr){
-	if(checkCloudJson){
-		switch ($JsonArr['notification']['task']) {
-			case 'alert':
-				sendNotification($JsonArr);
-				break;
-		}
-	}else{
-		//$JsonArr['cloud']['task'] = 'false';	
-		//SimpleLogger::debug("Json false - ".json_encode($JsonArr['cloud'], JSON_UNESCAPED_SLASHES)."(createUpdateJson)\n");
+	switch ($JsonArr['notification']['task']) {
+		case 'alert':
+			sendNotification($JsonArr);
+			break;
 	}
 	return $JsonArr;
 }
@@ -516,6 +588,9 @@ function sendNotification($JsonArr){
 		switch ($value['service']) {
 			case 'telegram':	
 				sendTelegram($JsonArr,$value);
+				break;
+			case 'telegram-bot':
+				sendTelegramBot($JsonArr,$value);
 				break;
 			case 'pushover':
 				sendPushover($JsonArr,$value);
@@ -540,7 +615,7 @@ function getMsg($JsonArr){
 	
 	
 	switch ($JsonArr['notification']['lang']) {
-		case de:
+		case 'de':
 			if($JsonArr['notification']['message'] == 'up'){
 			return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'down'){
@@ -551,7 +626,7 @@ function getMsg($JsonArr){
 				return $de_alert_test;
 			}
 			break;
-		case en:
+		case 'en':
 			if($JsonArr['notification']['message'] == 'up'){
 				return sprintf($en_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'down'){
@@ -584,6 +659,17 @@ function sendTelegram($JsonArr,$services){
 	}
 }
 
+function sendTelegramBot($JsonArr,$services){	
+	global $telegram_bot_api;
+	$url = 'https://api.telegram.org/bot' . $telegram_bot_api . '/sendMessage?text="'.getMsg($JsonArr).'"&chat_id='.$services['key2'].'';
+	$result = json_decode(file_get_contents($url));
+	if($result->ok === true){
+		SimpleLogger::info("Message has been sent! \n");
+	}else{
+		SimpleLogger::error("Message could not be sent! \n");		
+	}
+}
+
 function sendPushover($JsonArr,$services){
 	curl_setopt_array($ch = curl_init(), array(
 	  CURLOPT_URL => "https://api.pushover.net/1/messages.json",
@@ -597,6 +683,21 @@ function sendPushover($JsonArr,$services){
 	));
 	curl_exec($ch);
 	curl_close($ch);
+}
+//-----------------------------------------------------------------------------
+function isAssoc($arr){
+	if (count($arr) == count($arr, COUNT_RECURSIVE)){
+		return false;
+	}else{
+		return true;
+	}
+}
+//-----------------------------------------------------------------------------
+function guidv4(){
+    $data = openssl_random_pseudo_bytes( 16 );
+    $data[6] = chr( ord( $data[6] ) & 0x0f | 0x40 ); // set version to 0100
+    $data[8] = chr( ord( $data[8] ) & 0x3f | 0x80 ); // set bits 6-7 to 10
+    return vsprintf( '%s%s-%s-%s-%s-%s%s%s', str_split( bin2hex( $data ), 4 ) );
 }
 
 ?>
