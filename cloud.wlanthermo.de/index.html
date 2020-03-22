@@ -721,6 +721,15 @@
 				display:inline;
 			}
 		}
+		/* Landscape Apple Watch */ 
+		@media only screen and (max-width: 320px){ 
+			#temp_channel{
+				display:inline;
+			}
+			#chart_container{
+				display:none;
+			}			
+		}							   
 
 		.pure-menu-fixed {
 			position:fixed;
@@ -2041,7 +2050,7 @@
 	<div id="spinner"></div>
 </div>
 <script> 
-	var debug = true;
+	var debug = false;
 	var chart_ts;
 	HTTP_GET_VARS=new Array();
 	strGET=document.location.search.substr(1,document.location.search.length);
@@ -2060,11 +2069,24 @@
 		if(!HTTP_GET_VARS[v]){return 'undefined';}
 		return HTTP_GET_VARS[v];
 	}
-	var api_data = 'data2.php?api_token=' + GET('api_token');
+	var api_data = 'data.php?api_token=' + GET('api_token');
 	var api_data_test = api_data + '&chartHistory=true';
 	if(GET('time') != 'undefined'){
 		api_data_test = api_data_test + '&time=' + GET('time');
 	}
+	// Debug Mode
+	var debug = false;
+	if(GET('debug') == 'true'){
+		if(debug === true){console.log('Debug Mode = true');}
+		debug = true;
+	}
+	// Battery Chart
+	var batteryChart = false;
+	if(GET('battery') == 'true'){
+		if(debug === true){console.log('BatteryChart = true');}
+		batteryChart = true;
+	}
+	//--------------------
 	var byId = function( id ) { return document.getElementById( id ); };
 	var byClass = function( id ) { return document.getElementsByClassName( id ); };
 	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
@@ -2371,6 +2393,19 @@
 				count++;
 			}
 		}
+		if(batteryChart === true){
+			chart_datasets_unit.push('%');
+			chart_labels.push('Battery');
+			datasetValue.push({
+				label: "Battery",
+				yAxisID: "B", 
+				radius: 0,
+				lineTension: 0,
+				borderColor: 'white',
+				borderWidth: 1,
+				data: []
+			});		
+		}
 		chart_datasets = new Array(count).fill(null);
 		if(debug === true){console.log(count)}	
 		myChartConfig = {
@@ -2615,6 +2650,10 @@
 					nanoChart.data.datasets[i].data.push(null);
 					i++;
 				}
+			}
+			if(batteryChart === true){
+				nanoChart.data.datasets[i].fill = false;
+				nanoChart.data.datasets[i].data.push(jr.system.soc);
 			}
 		}
 		

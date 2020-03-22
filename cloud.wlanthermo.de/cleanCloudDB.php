@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-require_once("/var/www/virtual/nano/config.inc.php");
+require_once("/var/www/virtual/nano/dev-config.inc.php");
 /* @author Florian Riedl
  *
  */	

@@ -12,7 +12,7 @@ $logpath = '../logs/';  // global var for logger class filepath
 require_once("../include/logger.php"); // logger class
 //-----------------------------------------------------------------------------
 // include database config
-require_once("../config.inc.php"); // 
+require_once("../dev-config.inc.php"); // 
 //-----------------------------------------------------------------------------
 if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	$api_token=$_GET['api_token'];
@@ -26,8 +26,6 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		die('false');
 	}
-
-
 }
 
 

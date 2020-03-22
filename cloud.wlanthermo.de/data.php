@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 $logfile = '_getData.log'; // global var for logger class filename
 $logpath = '../logs/';  // global var for logger class filepath
 require_once("../include/logger.php");
-require_once("../config.inc.php");
+require_once("../dev-config.inc.php");
 /* @author Florian Riedl
  */	
 
