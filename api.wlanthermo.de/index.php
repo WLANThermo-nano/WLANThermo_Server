@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 22/03/20
+		@version 1.0, 25/04/20
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -468,6 +468,7 @@ function sendNotification($JsonArr){
 }
 
 function getMsg($JsonArr){
+
 	$de_alert_up = 'ACHTUNG! Kanal %s: Temperatur (%s°%s) ist zu hoch (%s°%s)';
 	$de_alert_down = 'ACHTUNG! Kanal %s: Temperatur (%s°%s) ist zu tief (%s°%s)';
 	$en_alert_up = 'ATTENTION! Channel %s: Temperature (%s°%s) is too high (%s°%s)';
@@ -493,9 +494,9 @@ function getMsg($JsonArr){
 			break;
 		case 'en':
 			if($JsonArr['notification']['message'] == 'up'){
-				return sprintf($en_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+				return sprintf($en_alert_up , $JsonArr['notification']['channel'] , $JsonArr['notification']['temp'][0] , $JsonArr['notification']['unit'] , $JsonArr['notification']['temp'][1] , $JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'down'){
-				return sprintf($en_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+				return sprintf($en_alert_down , $JsonArr['notification']['channel'] , $JsonArr['notification']['temp'][0] , $JsonArr['notification']['unit'] , $JsonArr['notification']['temp'][1] , $JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'battery'){
 				return $en_alert_battery;	
 			}else if($JsonArr['notification']['message'] === 'test'){
@@ -515,7 +516,7 @@ function getMsg($JsonArr){
 }
 
 function sendTelegram($JsonArr,$services){	
-	$url = 'https://api.telegram.org/bot' . $services['key1'] . '/sendMessage?text="'.getMsg($JsonArr).'"&chat_id='.$services['key2'].'';
+	$url = 'https://api.telegram.org/bot' . $services['key1'] . '/sendMessage?text="' . getMsg($JsonArr) . '"&chat_id=' . $services['key2'];
 	$result = json_decode(file_get_contents($url));
 	if($result->ok === true){
 		SimpleLogger::info("Message has been sent! \n");
@@ -526,7 +527,7 @@ function sendTelegram($JsonArr,$services){
 
 function sendTelegramBot($JsonArr,$services){	
 	global $telegram_bot_api;
-	$url = 'https://api.telegram.org/bot' . $telegram_bot_api . '/sendMessage?text="'.getMsg($JsonArr).'"&chat_id='.$services['key2'].'';
+	$url = 'https://api.telegram.org/bot' . $telegram_bot_api . '/sendMessage?text="' . getMsg($JsonArr) . '"&chat_id=' . $services['key2'];
 	$result = json_decode(file_get_contents($url));
 	if($result->ok === true){
 		SimpleLogger::info("Message has been sent! \n");
@@ -566,5 +567,3 @@ function guidv4(){
     $data[8] = chr( ord( $data[8] ) & 0x3f | 0x80 ); // set bits 6-7 to 10
     return vsprintf( '%s%s-%s-%s-%s-%s%s%s', str_split( bin2hex( $data ), 4 ) );
 }
-
-?>

@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 0.2, 15/03/20
+		@version 1.0, 24/05/20
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -306,5 +306,4 @@ class Device extends DB{
 		}
 	}
 }
-
 ?>

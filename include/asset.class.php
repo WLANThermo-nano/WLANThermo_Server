@@ -70,5 +70,4 @@ class asset extends DB{
 		}			
 	}
 }
-
 ?>

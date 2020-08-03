@@ -30,12 +30,10 @@ SimpleLogger::$debug = true;
 // include database and logfile config
 if(stristr($_SERVER['SERVER_NAME'], 'dev-')){
 	require_once("../include/dev-db.class.php");
-	require_once("../dev-config.inc.php"); // REMOVE
 	SimpleLogger::$filePath = '../logs/dev-cloud.wlanthermo.de/saveData_'.strftime("%Y-%m-%d").'.log';
 	SimpleLogger::info("load ../dev-db.class.php\n");
 }else{
 	require_once("../include/db.class.php");
-	require_once("../config.inc.php"); // REMOVE
 	SimpleLogger::$filePath = '../logs/cloud.wlanthermo.de/saveData_'.strftime("%Y-%m-%d").'.log';
 	SimpleLogger::info("load ../db.class.php\n");
 }	

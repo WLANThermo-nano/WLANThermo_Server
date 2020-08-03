@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 12/02/20
+		@version 1.0, 24/05/20
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,44 +53,53 @@ if(checkDevice()){
     http_response_code(400); // Bad request
 	exit;
 }
-
 if (isset($_GET['getFirmware']) AND !empty($_GET['getFirmware'])){
 	$return = $device->getSoftwareByVersion($_GET['getFirmware']);
-	$keys = array_keys($return);
-	for($i = 0; $i < count($return); $i++) {
-		if($return[$keys[$i]]['file_type'] == 'firmware'){
-			$asset->setAssetId($return[$keys[$i]]['asset_id']);
-			$file = $asset->getFile();
-			$filename = $asset->getFileName();
-			if(!$filename){
-				$filename = "filename.bin";
-			}
-			if($file){
-				header('Content-disposition: attachment; filename='.$filename.'');
-				header('Content-Transfer-Encoding: binary');
-				header("Content-Length: ".strlen($file));
-				echo($file);
-			}					
-		}		
+	if($return != false){
+		$keys = array_keys($return);
+		for($i = 0; $i < count($return); $i++) {
+			if($return[$keys[$i]]['file_type'] == 'firmware'){
+				$asset->setAssetId($return[$keys[$i]]['asset_id']);
+				$file = $asset->getFile();
+				$filename = $asset->getFileName();
+				if(!$filename){
+					$filename = "filename.bin";
+				}
+				if($file){
+					header('Content-disposition: attachment; filename='.$filename.'');
+					header('Content-Transfer-Encoding: binary');
+					header("Content-Length: ".strlen($file));
+					echo($file);
+				}					
+			}		
+		}
+	}else{
+		http_response_code(404); // not found
+		exit;
 	}
 }elseif (isset($_GET['getSpiffs']) AND !empty($_GET['getSpiffs'])){
 	$return = $device->getSoftwareByVersion($_GET['getSpiffs']);
-	$keys = array_keys($return);
-	for($i = 0; $i < count($return); $i++) {
-		if($return[$keys[$i]]['file_type'] == 'spiffs'){
-			$asset->setAssetId($return[$keys[$i]]['asset_id']);
-			$file = $asset->getFile();
-			$filename = $asset->getFileName();
-			if(!$filename){
-				$filename = "filename.bin";
-			}
-			if($file){
-				header('Content-disposition: attachment; filename='.$filename.'');
-				header('Content-Transfer-Encoding: binary');
-				header("Content-Length: ".strlen($file));
-				echo($file);
-			}					
-		}		
+	if($return != false){
+		$keys = array_keys($return);
+		for($i = 0; $i < count($return); $i++) {
+			if($return[$keys[$i]]['file_type'] == 'spiffs'){
+				$asset->setAssetId($return[$keys[$i]]['asset_id']);
+				$file = $asset->getFile();
+				$filename = $asset->getFileName();
+				if(!$filename){
+					$filename = "filename.bin";
+				}
+				if($file){
+					header('Content-disposition: attachment; filename='.$filename.'');
+					header('Content-Transfer-Encoding: binary');
+					header("Content-Length: ".strlen($file));
+					echo($file);
+				}					
+			}		
+		}
+	}else{
+		http_response_code(404); // not found
+		exit;
 	}
 }else{
 	header("Content-Length: ".strlen($device->getSoftwareUpdate()[0]['software_version']));
@@ -112,6 +121,3 @@ function checkDevice(){
 		return false;
 	}	
 }
-?>
-
-

@@ -132,6 +132,3 @@ function getGithubJson($githubApiUrl){
 	}
 	curl_close($ch);
 }
-?>
-
-

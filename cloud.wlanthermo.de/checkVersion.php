@@ -1,4 +1,25 @@
 <?php
+ /*************************************************** 
+    Copyright (C) 2020  Florian Riedl
+    ***************************
+		@author Florian Riedl
+		@version 1.0, 03/07/20
+	***************************
+	This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
+    HISTORY: Please refer Github History
+    
+ ****************************************************/
+
 //-----------------------------------------------------------------------------
 // error reporting
  error_reporting(E_ALL); 
@@ -28,7 +49,6 @@ if (isset($_GET['api_token']) AND !empty($_GET['api_token'])){
 	}
 }
 
-
 $serial = getSerial($dbh,$api_token);
 if($serial != false){
 	$software_version = getSwVersion($dbh,$serial);
@@ -40,10 +60,15 @@ if($serial != false){
 				echo $newVersion;
 			}else{
 				echo 'false';
-			}
-			
+			}			
+		}else{
+			echo 'false';
 		}
-	}	
+	}else{
+		echo 'false';	
+	}
+}else{
+	echo 'false';
 }	
 
 function getSwVersion($dbh,$serial){
@@ -68,7 +93,6 @@ function getSwVersion($dbh,$serial){
 	}	
 }
 
-
 function getSerial($dbh,$api_token){
 	try {
 		$sql = "SELECT serial FROM cloud where api_token= :api_token limit 1 ";
@@ -90,7 +114,6 @@ function getSerial($dbh,$api_token){
 	}	
 }
 
-
 function checkVersion($dbh,$serial,$version){
 	try {
 		$sql = "select s1.software_version from sw_versions as s1, 
@@ -107,12 +130,12 @@ function checkVersion($dbh,$serial,$version){
 		  $deviceInfo = $statement->fetch();
 		  return($deviceInfo['software_version']);
 		} else {
-		  return('false');
+		  return(false);
 		}
 	} catch (PDOException $e) {
 		SimpleLogger::error("An error has occurred - (checkVersion)\n");
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
-		return('false');
+		return(false);
 	}	
 }
 //-----------------------------------------------------------------------------

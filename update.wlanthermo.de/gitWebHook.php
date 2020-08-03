@@ -201,5 +201,3 @@ if($JsonArr['release']['target_commitish'] == "master"){
 		header('HTTP/1.0 404 Not Found');
 	}
 }
-
-?>

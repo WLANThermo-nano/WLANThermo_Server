@@ -1,11 +1,42 @@
 <?php
 error_reporting(E_ALL);
-$logfile = '_getData.log'; // global var for logger class filename
-$logpath = '../logs/';  // global var for logger class filepath
-require_once("../include/logger.php");
-require_once("../dev-config.inc.php");
-/* @author Florian Riedl
- */	
+ /*************************************************** 
+    Copyright (C) 2020  Florian Riedl
+    ***************************
+		@author Florian Riedl
+		@version 1.0, 03/07/20
+	***************************
+	This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
+    HISTORY: Please refer Github History
+    
+ ****************************************************/
+
+// include logging libary 
+require_once("../include/SimpleLogger.php"); // logger class
+SimpleLogger::$debug = true;
+
+// include database and logfile config
+if(stristr($_SERVER['SERVER_NAME'], 'dev-')){
+	require_once("../include/dev-db.class.php");
+	require_once("../dev-config.inc.php"); // REMOVE
+	SimpleLogger::$filePath = '../logs/dev-cloud.wlanthermo.de/getData_'.strftime("%Y-%m-%d").'.log';
+	SimpleLogger::info("load ../dev-db.class.php\n");
+}else{
+	require_once("../include/db.class.php");
+	require_once("../config.inc.php"); // REMOVE
+	SimpleLogger::$filePath = '../logs/cloud.wlanthermo.de/getData_'.strftime("%Y-%m-%d").'.log';
+	SimpleLogger::info("load ../db.class.php\n");
+}	
 
 //SimpleLogger::info("############################################################\n");
 ob_start('ob_gzhandler');
@@ -106,6 +137,7 @@ function getData($dbh,$api_token){
 		die('false');
 	}
 }	
+
 function getHistory($dbh,$api_token,$api_time){
 	try {
 		$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND `time` > TIMESTAMP(DATE_SUB(NOW(), INTERVAL :history_time hour)) order by `id` asc";
@@ -247,5 +279,3 @@ function isAssoc($arr){
 }
 
 ?>
-
-

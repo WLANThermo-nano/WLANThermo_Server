@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 13/02/20
+		@version 1.0, 21/04/20
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,6 +56,3 @@ if (isset($_GET['asset_id']) AND !empty($_GET['asset_id'])){
 		exit;
 	}
 }
-?>
-
-

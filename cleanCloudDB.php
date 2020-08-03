@@ -23,13 +23,15 @@
 error_reporting(E_ALL);
 
 // include logging libary 
-require_once("/var/www/vhosts/wlanthermo.de/include/SimpleLogger.php"); // logger class
-SimpleLogger::$debug = true;
+
+
 
 // include database and logfile config
 
-require_once("/var/www/vhosts/wlanthermo.de/dev-config.inc.php"); // REMOVE
-SimpleLogger::$filePath = '/var/www/vhosts/wlanthermo.de/logs/api.wlanthermo.de/cleanCloudDB_'.strftime("%Y-%m-%d").'.log';
+require_once('dev-config.inc.php'); // REMOVE
+require_once('include/SimpleLogger.php'); // logger class
+SimpleLogger::$filePath = 'var/www/vhosts/api.wlanthermo.de/cleanCloudDB_'.strftime("%Y-%m-%d").'.log';
+SimpleLogger::$debug = true;
 SimpleLogger::info("------------------------------------------------------------\n");
 SimpleLogger::info("starting clean process...\n");
 
@@ -58,6 +60,7 @@ function cleanCloud($dbh){
 		$inserted = $statement->execute();
 		//echo $statement->rowCount(); 
 		SimpleLogger::info("".$statement->rowCount()." entries have been deleted\n");
+		echo $statement->rowCount();
 		if($inserted){
 			return true;
 		}else{

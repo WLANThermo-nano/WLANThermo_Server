@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 22/03/20
+		@version 1.0, 26/05/20
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,17 @@ class Cloud extends DB{
 			$statement = $this->connect()->prepare($sql);
 			$statement->bindValue(':serial', $serial);
 			$statement->bindValue(':api_token', $api_token);
-			foreach($data as $key => $d){			
+			foreach($data as $key => $d){	
+				if(isset($d['pitmaster']) && !$this->isAssoc($d['pitmaster'])){	
+					$arr = $d['pitmaster'];
+					unset($d['pitmaster']);
+					$d['pitmaster'][0] = $arr;
+				}
+
+				if($d['system']['time'] <= '1483228800'){
+					$d['system']['time'] = time();
+				}
+				
 				$statement->bindValue(':data', json_encode($d, JSON_UNESCAPED_SLASHES));
 				$statement->execute();
 			}				
@@ -43,6 +53,7 @@ class Cloud extends DB{
 			return false;
 		}			
 	}
+	
 	private function checkCloudJson($serial,$api_token,$data){
 		if (isset($serial) AND !empty($serial) AND 
 			isset($api_token) AND !empty($api_token) AND
@@ -52,6 +63,13 @@ class Cloud extends DB{
 			return false;
 		}
 	}
+	
+	private function isAssoc($arr){
+		if (count($arr) == count($arr, COUNT_RECURSIVE)){
+			return false;
+		}else{
+			return true;
+		}			
+	}
 }
-
 ?>
