@@ -201,7 +201,7 @@ function createUpdateJson($JsonArr,$softwareArr){
 		$JsonArr['update']['version'] = $softwareArr[0]['software_version'];
 		$keys = array_keys($softwareArr);
 		for($i = 0; $i < count($softwareArr); $i++) {
-			$JsonArr['update'][$softwareArr[$keys[$i]]['file_type']]['url'] = "http://dev-update.wlanthermo.de/getFile.php?asset_id=".$softwareArr[$keys[$i]]['asset_id']."";  //$softwareArr[$keys[$i]]['file_url'];
+			$JsonArr['update'][$softwareArr[$keys[$i]]['file_type']]['url'] = "http://update.wlanthermo.de/getFile.php?asset_id=".$softwareArr[$keys[$i]]['asset_id']."";  //$softwareArr[$keys[$i]]['file_url'];
 			// $JsonArr['update'][$softwareArr[$keys[$i]]['file_type']]['sha256'] = $softwareArr[$keys[$i]]['file_sha256'];
 			$JsonArr['update'][$softwareArr[$keys[$i]]['file_type']]['asset_id'] = $softwareArr[$keys[$i]]['asset_id'];			
 		}					

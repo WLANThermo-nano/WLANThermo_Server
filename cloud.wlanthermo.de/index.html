@@ -2588,19 +2588,19 @@
 		})
 	}   
 	
-	var api_sw = 'checkVersion.php?api_token=' + GET('api_token');
-	loadSwData();
-	function loadSwData(){
-		updateHelp = '<br><b>Die Software auf deinem WLANThermo Nano ist veraltet.</b><br><br>Bitte führe ein Online-Update der Software durch, indem du im Webinterface (nicht in der Cloud!) rechts oben auf den Update-Hinweis klickst (gelbes Ausrufezeichen) und bestätigst.<br>Das Update dauert weniger als 3 Minuten.<br>Vielen Dank!<br><br><b>Hinweis:</b><br>Sollte kein Update-Hinweis vorhanden sein, ist die Software auf deinem WLANThermo Nano so alt, dass du das Online-Update manuell einleiten musst.<br>Hierfür rufst du im Browser bitte die Seite <b>IPdeinesNano/update</b> auf, gibst dort "<b>v1.0.4</b>" ohne die Anführungszeichen ein und startest das Update.<br><br>Informationen zum Update findest du in unserem WLANThermo Forum: <a style="color:red" href="https://forum.wlanthermo.de"><b>Link</b></a><br>Hier kannst du auch Fragen zum Online-Update stellen, die wir dir gerne beantworten werden.<br><br>Dein WLANThermo Team';
-		loadJSON(api_sw, '', '10000', function (response) {
-			if (response == 'false'){
-				//alert('kein Update');
-			}else{
-				setHelpBox('ACHTUNG!',updateHelp);
-				//alert('Update');
-			}
-		})
-	}  
+	<!-- var api_sw = 'checkVersion.php?api_token=' + GET('api_token'); -->
+	<!-- loadSwData(); -->
+	<!-- function loadSwData(){ -->
+		<!-- updateHelp = '<br><b>Die Software auf deinem WLANThermo Nano ist veraltet.</b><br><br>Bitte führe ein Online-Update der Software durch, indem du im Webinterface (nicht in der Cloud!) rechts oben auf den Update-Hinweis klickst (gelbes Ausrufezeichen) und bestätigst.<br>Das Update dauert weniger als 3 Minuten.<br>Vielen Dank!<br><br><b>Hinweis:</b><br>Sollte kein Update-Hinweis vorhanden sein, ist die Software auf deinem WLANThermo Nano so alt, dass du das Online-Update manuell einleiten musst.<br>Hierfür rufst du im Browser bitte die Seite <b>IPdeinesNano/update</b> auf, gibst dort "<b>v1.0.4</b>" ohne die Anführungszeichen ein und startest das Update.<br><br>Informationen zum Update findest du in unserem WLANThermo Forum: <a style="color:red" href="https://forum.wlanthermo.de"><b>Link</b></a><br>Hier kannst du auch Fragen zum Online-Update stellen, die wir dir gerne beantworten werden.<br><br>Dein WLANThermo Team'; -->
+		<!-- loadJSON(api_sw, '', '10000', function (response) { -->
+			<!-- if (response == 'false'){ -->
+				<!-- //alert('kein Update'); -->
+			<!-- }else{ -->
+				<!-- setHelpBox('ACHTUNG!',updateHelp); -->
+				<!-- //alert('Update'); -->
+			<!-- } -->
+		<!-- }) -->
+	<!-- }   -->
 	
 	function addData(timestamp,jr,update){
 		nanoChart.data.labels.push(timestamp);

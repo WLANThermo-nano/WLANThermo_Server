@@ -24,18 +24,19 @@ error_reporting(E_ALL);
 	 
 require_once("../include/SimpleLogger.php"); // logger class
 require_once("../include/db.class.php");
-require_once("../dev-config.inc.php");
+require_once("../config.inc.php");
 
 SimpleLogger::$filePath = '../logs/update.wlanthermo.de/gitImporter_'.strftime("%Y-%m-%d").'.log';
-SimpleLogger::$debug = false;
+SimpleLogger::$debug = true;
 SimpleLogger::info("############################################################\n");
 SimpleLogger::info("starting update script...\n");
-$githubApiUrl = 'https://api.github.com/repos/WLANThermo-nano/WLANThermo_nano_Software/releases?per_page=100';
+//$githubApiUrl = 'https://api.github.com/repos/WLANThermo-nano/WLANThermo_nano_Software/releases?per_page=100';
+$githubApiUrl = 'https://api.github.com/repos/WLANThermo-nano/WLANThermo_ESP32_Software/releases?per_page=100';
 
 // read Json from GIT
 SimpleLogger::info("Download JSON from GITHUB...\n");
 $result = getGithubJson($githubApiUrl);
-echo "Start Github import<br>";
+//echo "Start Github import<br>";
 if($result !== false){
 	$result = array_reverse($result);
 	foreach ($result as $key => $inhalt1){
@@ -45,16 +46,17 @@ if($result !== false){
 		foreach ($inhalt1['assets'] as $key => $inhalt){
 			$arr = explode('_',pathinfo($inhalt['name'])['filename']);
 			$file = false;
-			echo "File '".$inhalt['name']."' try imported into the database<br>";
+			//echo "File '".$inhalt['name']."' try imported into the database<br>";
 			try {
 				$file = file_get_contents(strval($inhalt['browser_download_url']), true);
 
 			} catch (Exception $e) {
 				$err_flag = true;
+				SimpleLogger::info("Exception\n");
 			}
 			//SimpleLogger::debug("foreach\n");
 			if(count($arr) == 5 AND $file !== false){
-				//SimpleLogger::debug("validation true\n");
+				SimpleLogger::debug("validation true\n");
 				$db = new DB();
 				$sql = "INSERT INTO software_files (device, hardware_version, cpu, software_version, release_id, asset_id, prerelease, file_type, file_url, file_name,file_sha256, file) 
 						VALUES (:device, :hardware_version, :cpu, :software_version, :release_id, :asset_id, :prerelease, :file_type, :file_url, :file_name,:file_sha256, :file)";
@@ -73,19 +75,15 @@ if($result !== false){
 				$statement->bindValue(':file', $file, PDO::PARAM_LOB);
 				$inserted = $statement->execute();
 				if($inserted){
-					echo "File '".$inhalt['name']."' was imported into the database<br>";
+					//echo "File '".$inhalt['name']."' was imported into the database<br>";
 				}else{
-					echo "false<br>";
+					//echo "false<br>";
 					$err_flag = true;
 				}				
 			}else{
 				echo "Filename '".$inhalt['name']."' or file not valid<br>";
 				$err_flag = true; 
 			}
-			echo str_pad('',4096)."\n";
-			echo "<br>";
-			flush();
-			ob_flush();
 		}		
 	}
 
