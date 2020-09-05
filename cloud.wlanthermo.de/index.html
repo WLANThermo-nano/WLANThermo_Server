@@ -9,7 +9,7 @@
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<link rel="apple-touch-icon-precomposed" href="https://raw.githubusercontent.com/WLANThermo-nano/WLANThermo_nano_Logos/master/apple-touch-cloud-icon-180x180-precomposed.png" >
 	<!-- <link rel="apple-touch-startup-image" href="startupimagename.png" > -->
-    <title>WLANThermo - Nano</title>
+    <title>WLANThermo - the smartest way to BBQ</title>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.3/jspdf.min.js"></script>
@@ -721,6 +721,15 @@
 				display:inline;
 			}
 		}
+		/* Landscape Apple Watch */ 
+		@media only screen and (max-width: 320px){ 
+			#temp_channel{
+				display:inline;
+			}
+			#chart_container{
+				display:none;
+			}			
+		}							   
 
 		.pure-menu-fixed {
 			position:fixed;
@@ -2041,7 +2050,7 @@
 	<div id="spinner"></div>
 </div>
 <script> 
-	var debug = true;
+	var debug = false;
 	var chart_ts;
 	HTTP_GET_VARS=new Array();
 	strGET=document.location.search.substr(1,document.location.search.length);
@@ -2060,11 +2069,24 @@
 		if(!HTTP_GET_VARS[v]){return 'undefined';}
 		return HTTP_GET_VARS[v];
 	}
-	var api_data = 'data2.php?api_token=' + GET('api_token');
+	var api_data = 'data.php?api_token=' + GET('api_token');
 	var api_data_test = api_data + '&chartHistory=true';
 	if(GET('time') != 'undefined'){
 		api_data_test = api_data_test + '&time=' + GET('time');
 	}
+	// Debug Mode
+	var debug = false;
+	if(GET('debug') == 'true'){
+		if(debug === true){console.log('Debug Mode = true');}
+		debug = true;
+	}
+	// Battery Chart
+	var batteryChart = false;
+	if(GET('battery') == 'true'){
+		if(debug === true){console.log('BatteryChart = true');}
+		batteryChart = true;
+	}
+	//--------------------
 	var byId = function( id ) { return document.getElementById( id ); };
 	var byClass = function( id ) { return document.getElementsByClassName( id ); };
 	var getIcon = function( icon ) { return '<span class="icon-'  + icon + '"></span>'; };
@@ -2371,6 +2393,19 @@
 				count++;
 			}
 		}
+		if(batteryChart === true){
+			chart_datasets_unit.push('%');
+			chart_labels.push('Battery');
+			datasetValue.push({
+				label: "Battery",
+				yAxisID: "B", 
+				radius: 0,
+				lineTension: 0,
+				borderColor: 'white',
+				borderWidth: 1,
+				data: []
+			});		
+		}
 		chart_datasets = new Array(count).fill(null);
 		if(debug === true){console.log(count)}	
 		myChartConfig = {
@@ -2553,19 +2588,19 @@
 		})
 	}   
 	
-	var api_sw = 'checkVersion.php?api_token=' + GET('api_token');
-	loadSwData();
-	function loadSwData(){
-		updateHelp = '<br><b>Die Software auf deinem WLANThermo Nano ist veraltet.</b><br><br>Bitte führe ein Online-Update der Software durch, indem du im Webinterface (nicht in der Cloud!) rechts oben auf den Update-Hinweis klickst (gelbes Ausrufezeichen) und bestätigst.<br>Das Update dauert weniger als 3 Minuten.<br>Vielen Dank!<br><br><b>Hinweis:</b><br>Sollte kein Update-Hinweis vorhanden sein, ist die Software auf deinem WLANThermo Nano so alt, dass du das Online-Update manuell einleiten musst.<br>Hierfür rufst du im Browser bitte die Seite <b>IPdeinesNano/update</b> auf, gibst dort "<b>v1.0.4</b>" ohne die Anführungszeichen ein und startest das Update.<br><br>Informationen zum Update findest du in unserem WLANThermo Forum: <a style="color:red" href="https://forum.wlanthermo.de"><b>Link</b></a><br>Hier kannst du auch Fragen zum Online-Update stellen, die wir dir gerne beantworten werden.<br><br>Dein WLANThermo Team';
-		loadJSON(api_sw, '', '10000', function (response) {
-			if (response == 'false'){
-				//alert('kein Update');
-			}else{
-				setHelpBox('ACHTUNG!',updateHelp);
-				//alert('Update');
-			}
-		})
-	}  
+	<!-- var api_sw = 'checkVersion.php?api_token=' + GET('api_token'); -->
+	<!-- loadSwData(); -->
+	<!-- function loadSwData(){ -->
+		<!-- updateHelp = '<br><b>Die Software auf deinem WLANThermo Nano ist veraltet.</b><br><br>Bitte führe ein Online-Update der Software durch, indem du im Webinterface (nicht in der Cloud!) rechts oben auf den Update-Hinweis klickst (gelbes Ausrufezeichen) und bestätigst.<br>Das Update dauert weniger als 3 Minuten.<br>Vielen Dank!<br><br><b>Hinweis:</b><br>Sollte kein Update-Hinweis vorhanden sein, ist die Software auf deinem WLANThermo Nano so alt, dass du das Online-Update manuell einleiten musst.<br>Hierfür rufst du im Browser bitte die Seite <b>IPdeinesNano/update</b> auf, gibst dort "<b>v1.0.4</b>" ohne die Anführungszeichen ein und startest das Update.<br><br>Informationen zum Update findest du in unserem WLANThermo Forum: <a style="color:red" href="https://forum.wlanthermo.de"><b>Link</b></a><br>Hier kannst du auch Fragen zum Online-Update stellen, die wir dir gerne beantworten werden.<br><br>Dein WLANThermo Team'; -->
+		<!-- loadJSON(api_sw, '', '10000', function (response) { -->
+			<!-- if (response == 'false'){ -->
+				<!-- //alert('kein Update'); -->
+			<!-- }else{ -->
+				<!-- setHelpBox('ACHTUNG!',updateHelp); -->
+				<!-- //alert('Update'); -->
+			<!-- } -->
+		<!-- }) -->
+	<!-- }   -->
 	
 	function addData(timestamp,jr,update){
 		nanoChart.data.labels.push(timestamp);
@@ -2615,6 +2650,10 @@
 					nanoChart.data.datasets[i].data.push(null);
 					i++;
 				}
+			}
+			if(batteryChart === true){
+				nanoChart.data.datasets[i].fill = false;
+				nanoChart.data.datasets[i].data.push(jr.system.soc);
 			}
 		}
 		
