@@ -32,7 +32,7 @@ $logpath = '../logs/';  // global var for logger class filepath
 require_once("../include/logger.php"); // logger class
 //-----------------------------------------------------------------------------
 // include database config
-require_once("../config.inc.php"); // 
+require_once("../dev-config.inc.php"); // 
 //-----------------------------------------------------------------------------
 $fw_array = array(
         'v0.5.0' => 2,
