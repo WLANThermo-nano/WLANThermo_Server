@@ -66,7 +66,7 @@ if (($JsonArr === null && json_last_error() !== JSON_ERROR_NONE) OR checkDeviceJ
 	exit;
 }
 
-	//Remove
+//Remove
 try {
 	$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
 	$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
@@ -143,14 +143,15 @@ foreach($JsonArr as $key => $value){
 
 $JsonArr['runtime'] = (microtime(true) - $time_start);
 $json = json_encode($JsonArr, JSON_UNESCAPED_SLASHES);	
-SimpleLogger::info("file_get_contents output:".$json."\n");
+//SimpleLogger::info("file_get_contents output:".$json."\n");
 //SimpleLogger::info("".$json."\n");
 
 header('Access-Control-Allow-Origin: *'); 
 header('Content-Type: application/json');
 header("Content-Length: ".strlen($json));
+SimpleLogger::info("Runtime 1:".(microtime(true) - $time_start)."\n");
 echo $json;	
-
+SimpleLogger::info("Runtime 2:".(microtime(true) - $time_start)."\n");
  /*************************************************** 
 	WLANThermo API functions 
  ****************************************************/
@@ -266,6 +267,7 @@ function createHistoryJson($dbh,$JsonArr){
 		$JsonArr['history']['task'] = 'false';	
 		SimpleLogger::debug("Json false - ".json_encode($JsonArr['history'], JSON_UNESCAPED_SLASHES)."(createHistoryJson)\n");
 	}
+	
 	return $JsonArr;
 }
 
@@ -353,18 +355,18 @@ function insertHistoryData($dbh,$JsonArr){
 						{
 							$arr['channel'][$key]['temp'] = $value['temp'];
 						}
-						if(isAssoc($obj['pitmaster'])){
+						// if(isAssoc($obj['pitmaster'])){
 							foreach ($obj['pitmaster'] as $key => $value)
 							{	
 								$arr['pitmaster'][$key]['value'] = $value['value'];
 								$arr['pitmaster'][$key]['set'] = $value['set'];
 								$arr['pitmaster'][$key]['typ'] = $value['typ'];
 							}					
-						}else{
-							$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
-							$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
-							$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
-						}
+						// }else{
+							// $arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
+							// $arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
+							// $arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+						// }
 						array_push($tmp, $arr);
 					}						// not last element
 				}
@@ -497,7 +499,7 @@ function getMsg($JsonArr){
 		
 		case 'de':
 			if($JsonArr['notification']['message'] == 'up'){
-			return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+				return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'down'){
 				return sprintf($de_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'battery'){
@@ -559,6 +561,9 @@ function sendPushover($JsonArr,$services){
 		"token" => $services['key1'],
 		"user" => $services['key2'],
 		"message" => getMsg($JsonArr),
+		//"priority" => "2",
+		//"retry" => "30",
+		//"expire" => "300",
 	  ),
 	  CURLOPT_SAFE_UPLOAD => true,
 	  CURLOPT_RETURNTRANSFER => true,

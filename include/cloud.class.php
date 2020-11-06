@@ -28,6 +28,7 @@ class Cloud extends DB{
 		if(!$this->checkCloudJson($serial,$api_token,$data)){
 			return false;
 		}
+		
 		try {
 			$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`) 
 					VALUES (:serial, :api_token, :data)";
@@ -63,7 +64,7 @@ class Cloud extends DB{
 			return false;
 		}
 	}
-	
+
 	public function readCloudData($api_token,$from = null,$to = null){
 
 		$from = isset($from) ? $from : strtotime("-1 day");
@@ -86,11 +87,16 @@ class Cloud extends DB{
 						//ToDo Error Hadling
 					}else{
 						$arr = array(); 
+						$n = 0;
 						$arr['system']['time'] = $obj['system']['time'];
 						$arr['system']['soc'] = $obj['system']['soc'];
 						foreach ( $obj['channel'] as $key => $value )
 						{
-							$arr['channel'][$key]['temp'] = $value['temp'];
+							if($value['temp'] != 999){
+								$arr['channel'][$n]['number'] = $value['number'];
+								$arr['channel'][$n]['temp'] = $value['temp'];
+								$n++;
+							}
 						}
 						if(isset($obj['pitmaster'])){					
 							foreach ($obj['pitmaster'] as $key => $value)
