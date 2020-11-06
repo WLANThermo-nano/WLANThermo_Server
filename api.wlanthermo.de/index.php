@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 25/04/20
+		@version 1.1, 23/09/20
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ if (($JsonArr === null && json_last_error() !== JSON_ERROR_NONE) OR checkDeviceJ
 	exit;
 }
 
-	//Remove
+//Remove
 try {
 	$dbh = new PDO(sprintf('mysql:host=%s;dbname=%s', $db_server, $db_name), $db_user, $db_pass);
 	$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
@@ -93,6 +93,7 @@ if(!$device->getDeviceActive()){
 	
 foreach($JsonArr as $key => $value){
 	switch ($key) {
+		
 		case 'update':	// process update 
 			if(isset($JsonArr['update']['version']) AND !empty($JsonArr['update']['version'])){
 				$JsonArr = (isset($JsonArr['update']['file']) AND !empty($JsonArr['update']['file'])) ? createUpdateJson($JsonArr,$device->getSoftwareByFileType($JsonArr['update']['version'], $JsonArr['update']['file'])) : createUpdateJson($JsonArr,$device->getSoftwareByVersion($JsonArr['update']['version']));
@@ -100,26 +101,40 @@ foreach($JsonArr as $key => $value){
 				$JsonArr = createUpdateJson($JsonArr,$device->getSoftwareUpdate(getPreReleaseFlag($JsonArr)));
 			}
 			break;
+			
 		case 'cloud':	// process cloud
 			$cloud = new Cloud();				
 			switch ($JsonArr['cloud']['task']) {
 				case 'save':	// process cloud save						
 					$JsonArr['cloud']['task'] = $cloud->insertCloudData($JsonArr['device']['serial'],$JsonArr['cloud']['api_token'],$JsonArr['cloud']['data']) ? 'true' : 'false';
+					unset($JsonArr['cloud']['data']);
 					break;
 				case 'read':	// process cloud read
-					// todo
+					
+					$from = isset($JsonArr['cloud']['from']) ? $JsonArr['cloud']['from'] : null;
+					$to = isset($JsonArr['cloud']['to']) ? $JsonArr['cloud']['to'] : null;
+					$data = $cloud->readCloudData($JsonArr['cloud']['api_token'], $from, $to);
+					
+					if($data){
+						$JsonArr['cloud']['task'] = true;
+						$JsonArr['cloud']['data'] = $data;
+					}else{
+						$JsonArr['cloud']['task'] = false;
+					}
 					break;	
 				default:
 				   $JsonArr['cloud']['task'] = 'false';						
-			}
-			unset($JsonArr['cloud']['data']);
+			}			
 			break;
+			
 		case 'history':	// process history
 			// $JsonArr = createHistoryJson($dbh,$JsonArr);
 			break;
+		
 		case 'notification':	// process notification
 			$JsonArr = createNotificationJson($JsonArr);
 			break;
+		
 		case 'alexa':	// process alexa
 			// $JsonArr = createAlexaJson($dbh,$JsonArr);
 			break;
@@ -128,14 +143,15 @@ foreach($JsonArr as $key => $value){
 
 $JsonArr['runtime'] = (microtime(true) - $time_start);
 $json = json_encode($JsonArr, JSON_UNESCAPED_SLASHES);	
-SimpleLogger::info("file_get_contents output:".$json."\n");
+//SimpleLogger::info("file_get_contents output:".$json."\n");
 //SimpleLogger::info("".$json."\n");
 
 header('Access-Control-Allow-Origin: *'); 
 header('Content-Type: application/json');
 header("Content-Length: ".strlen($json));
+SimpleLogger::info("Runtime 1:".(microtime(true) - $time_start)."\n");
 echo $json;	
-
+SimpleLogger::info("Runtime 2:".(microtime(true) - $time_start)."\n");
  /*************************************************** 
 	WLANThermo API functions 
  ****************************************************/
@@ -251,6 +267,7 @@ function createHistoryJson($dbh,$JsonArr){
 		$JsonArr['history']['task'] = 'false';	
 		SimpleLogger::debug("Json false - ".json_encode($JsonArr['history'], JSON_UNESCAPED_SLASHES)."(createHistoryJson)\n");
 	}
+	
 	return $JsonArr;
 }
 
@@ -338,18 +355,18 @@ function insertHistoryData($dbh,$JsonArr){
 						{
 							$arr['channel'][$key]['temp'] = $value['temp'];
 						}
-						if(isAssoc($obj['pitmaster'])){
+						// if(isAssoc($obj['pitmaster'])){
 							foreach ($obj['pitmaster'] as $key => $value)
 							{	
 								$arr['pitmaster'][$key]['value'] = $value['value'];
 								$arr['pitmaster'][$key]['set'] = $value['set'];
 								$arr['pitmaster'][$key]['typ'] = $value['typ'];
 							}					
-						}else{
-							$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
-							$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
-							$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
-						}
+						// }else{
+							// $arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
+							// $arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
+							// $arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+						// }
 						array_push($tmp, $arr);
 					}						// not last element
 				}
@@ -389,6 +406,7 @@ function checkAlexaJson($JsonArr){
 function createAlexaJson($dbh,$JsonArr){
 	if(checkAlexaJson($JsonArr)){
 		switch ($JsonArr['alexa']['task']) {
+			
 			case 'save':
 				if (insertAlexaKey($dbh,$JsonArr)){
 					$JsonArr['alexa']['task'] = 'true';
@@ -396,6 +414,7 @@ function createAlexaJson($dbh,$JsonArr){
 					$JsonArr['alexa']['task'] = 'false';
 				}
 				break;
+			
 			case 'delete':
 				$JsonArr['alexa']['token'] = NULL;
 				if (insertAlexaKey($dbh,$JsonArr)){
@@ -431,16 +450,9 @@ function insertAlexaKey($dbh,$JsonArr){
 }
 //-----------------------------------------------------------------------------
 
-function checkNotificationJson($dbh,$JsonArr){
-	if (isset($JsonArr['notification']['task']) AND !empty($JsonArr['notification']['task'])){
-		return true;
-	}else{
-		return false;
-	}
-}
-
 function createNotificationJson($JsonArr){
 	switch ($JsonArr['notification']['task']) {
+		
 		case 'alert':
 			sendNotification($JsonArr);
 			break;
@@ -451,15 +463,19 @@ function createNotificationJson($JsonArr){
 function sendNotification($JsonArr){
 	foreach($JsonArr['notification']['services'] as $key => $value){
 		switch ($value['service']) {
+			
 			case 'telegram':	
 				sendTelegram($JsonArr,$value);
 				break;
+			
 			case 'telegram-bot':
 				sendTelegramBot($JsonArr,$value);
 				break;
+			
 			case 'pushover':
 				sendPushover($JsonArr,$value);
 				break;
+			
 			case 'mail':
 				// ToDo
 				break;
@@ -479,11 +495,11 @@ function getMsg($JsonArr){
 	$de_alert_test = 'Testnachricht erfolgreich gesendet. Deine Einstellungen sind korrekt.';
 	$en_alert_test = 'Message sent successfully. Your settings are correct.';
 	
-	
 	switch ($JsonArr['notification']['lang']) {
+		
 		case 'de':
 			if($JsonArr['notification']['message'] == 'up'){
-			return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
+				return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'down'){
 				return sprintf($de_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
 			}else if($JsonArr['notification']['message'] === 'battery'){
@@ -492,6 +508,7 @@ function getMsg($JsonArr){
 				return $de_alert_test;
 			}
 			break;
+		
 		case 'en':
 			if($JsonArr['notification']['message'] == 'up'){
 				return sprintf($en_alert_up , $JsonArr['notification']['channel'] , $JsonArr['notification']['temp'][0] , $JsonArr['notification']['unit'] , $JsonArr['notification']['temp'][1] , $JsonArr['notification']['unit']);
@@ -502,6 +519,7 @@ function getMsg($JsonArr){
 			}else if($JsonArr['notification']['message'] === 'test'){
 				return $en_alert_test;
 			}
+		
 		default:
 			if($JsonArr['notification']['message'] == 'up'){
 				return sprintf($en_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
@@ -543,6 +561,9 @@ function sendPushover($JsonArr,$services){
 		"token" => $services['key1'],
 		"user" => $services['key2'],
 		"message" => getMsg($JsonArr),
+		//"priority" => "2",
+		//"retry" => "30",
+		//"expire" => "300",
 	  ),
 	  CURLOPT_SAFE_UPLOAD => true,
 	  CURLOPT_RETURNTRANSFER => true,

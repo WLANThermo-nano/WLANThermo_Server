@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 26/05/20
+		@version 1.1, 23/09/20
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ class Cloud extends DB{
 		if(!$this->checkCloudJson($serial,$api_token,$data)){
 			return false;
 		}
+		
 		try {
 			$sql = "INSERT INTO `cloud` (`serial`, `api_token`, `data`) 
 					VALUES (:serial, :api_token, :data)";
@@ -62,6 +63,60 @@ class Cloud extends DB{
 		}else{
 			return false;
 		}
+	}
+
+	public function readCloudData($api_token,$from = null,$to = null){
+
+		$from = isset($from) ? $from : strtotime("-1 day");
+		$to = isset($to) ? $to : strtotime("now");
+		
+		try {
+			$sql = "SELECT data FROM `cloud` WHERE api_token= :api_token AND time >= FROM_UNIXTIME(:from) AND time <= FROM_UNIXTIME(:to) ORDER BY `id` asc";
+			$statement = $this->connect()->prepare($sql);
+			$statement->bindValue(':api_token', $api_token);
+			$statement->bindValue(':from', $from);
+			$statement->bindValue(':to', $to);
+			$statement->execute();
+			$statement->setFetchMode(PDO::FETCH_ASSOC);
+			$data = array();
+			if ($statement->rowCount() > 0) {
+				foreach($statement as $daten) {
+					$obj = json_decode( $daten['data'], true );
+					if ($obj === null && json_last_error() !== JSON_ERROR_NONE) {
+						return false;
+						//ToDo Error Hadling
+					}else{
+						$arr = array(); 
+						$n = 0;
+						$arr['system']['time'] = $obj['system']['time'];
+						$arr['system']['soc'] = $obj['system']['soc'];
+						foreach ( $obj['channel'] as $key => $value )
+						{
+							if($value['temp'] != 999){
+								$arr['channel'][$n]['number'] = $value['number'];
+								$arr['channel'][$n]['temp'] = $value['temp'];
+								$n++;
+							}
+						}
+						if(isset($obj['pitmaster'])){					
+							foreach ($obj['pitmaster'] as $key => $value)
+							{
+								$arr['pitmaster'][$key]['value'] = $value['value'];
+								$arr['pitmaster'][$key]['set'] = $value['set'];
+								$arr['pitmaster'][$key]['typ'] = $value['typ'];
+							}					
+						}
+						array_push($data, $arr);
+					}
+				}
+				return($data);
+			} else {
+				return false;
+			}
+			
+		} catch (PDOException $e) {
+			return false;
+		}	
 	}
 	
 	private function isAssoc($arr){
