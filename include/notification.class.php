@@ -49,6 +49,40 @@
 		curl_close($ch);		
 	}
 	
+	public function sendFirebaseNotification($firebase_server_key,$token,$message=""){
+		$data = [
+			"notification" => [
+				"sound" => "default",
+				"body"  => $message,
+				"title" => "WLANThermo",
+				"content_available" => true,
+				"priority" => "high"
+			],
+			"data" => [
+				"sound" => "default",
+				"body"  => $message,
+				"title" => "WLANThermo",
+				"content_available" => true,
+				"priority" => "high"
+				],
+			"to" => $token
+		];
+
+		$ch = curl_init();
+
+		curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+		curl_setopt($ch, CURLOPT_POST, 1);
+
+		$headers = array();
+		$headers[] = 'Content-Type: application/json';
+		$headers[] = 'Authorization: key='.$firebase_server_key.'';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		$result = curl_exec($ch);
+		curl_close ($ch);
+	}
+	
 	public function getMessage($type,$lang="en",$channel="",$temp="",$limit="",$unit="C"){
 		$translation = '{
 					"de":{
