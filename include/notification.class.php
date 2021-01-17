@@ -45,10 +45,15 @@
 		  CURLOPT_SAFE_UPLOAD => true,
 		  CURLOPT_RETURNTRANSFER => true,
 		));
-		curl_exec($ch);
+		$result = json_decode(curl_exec($ch), true );
 		curl_close($ch);		
+		if($result['status'] == 1){
+			return true;
+		}else{
+			return false;
+		}
 	}
-	
+
 	public function sendFirebaseNotification($firebase_server_key,$token,$message=""){
 		$data = [
 			"notification" => [

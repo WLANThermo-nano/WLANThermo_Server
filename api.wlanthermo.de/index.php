@@ -28,7 +28,7 @@ $time_start = microtime(true);
 
 // include logging libary 
 require_once("../include/SimpleLogger.php"); // logger class
-SimpleLogger::$debug = true;
+SimpleLogger::$debug = false;
 
 // include database and logfile config
 if(stristr($_SERVER['SERVER_NAME'], 'dev-')){
