@@ -43,8 +43,6 @@ if(stristr($_SERVER['SERVER_NAME'], 'dev-')){
 // include notification libary
 require_once("../include/notification.class.php");
 
-// message.php?serial=54gfdgf&token=am7hrgkizhxbz89411y17kzo5w59ii&chatID=uxg4kym3shnhwjnz3ft5min2cw4osp&ch=0&msg=up&lang=de&service=pushover
-
 //whether ip is from share internet
 
 if (!empty($_SERVER['HTTP_CLIENT_IP'])){
