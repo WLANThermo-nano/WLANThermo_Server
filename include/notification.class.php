@@ -54,17 +54,17 @@
 		}
 	}
 
-	public function sendFirebaseNotification($firebase_server_key,$token,$message=""){
+	public function sendFirebaseNotification($firebase_server_key,$token,$message="",$sound="default"){
 		$data = [
 			"notification" => [
-				"sound" => "default",
+				"sound" => $sound,
 				"body"  => $message,
 				"title" => "WLANThermo",
 				"content_available" => true,
 				"priority" => "high"
 			],
 			"data" => [
-				"sound" => "default",
+				"sound" => $sound,
 				"body"  => $message,
 				"title" => "WLANThermo",
 				"content_available" => true,
@@ -86,6 +86,8 @@
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		$result = curl_exec($ch);
 		curl_close ($ch);
+		
+		return $data;
 	}
 	
 	public function getMessage($type,$lang="en",$channel="",$temp="",$limit="",$unit="C"){

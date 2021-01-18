@@ -142,7 +142,7 @@ foreach($JsonArr as $key => $value){
 					foreach($JsonArr['notification']['services'] as $key => $value){
 						switch ($value['service']) {
 							case 'telegram':
-								$notification->sendTelegram($value['key1'],$value['key2'],$notification->getMessage($JsonArr['notification']['message'],$JsonArr['notification']['lang'] ?? "en",$JsonArr['notification']['channel'] ?? "",$JsonArr['notification']['temp'][0] ?? "",$JsonArr['notification']['temp'][1] ?? ""));	
+								$notification->sendTelegram($value['key1'],$value['key2'],$notification->getMessage($JsonArr['notification']['message'],$JsonArr['notification']['lang'] ?? "en",$JsonArr['notification']['channel'] ?? "",$JsonArr['notification']['temp'][0] ?? "",$JsonArr['notification']['temp'][1] ?? ""),$JsonArr['notification']['sound'] ?? "");	
 								break;
 					
 							case 'pushover':
@@ -168,7 +168,7 @@ foreach($JsonArr as $key => $value){
 						break;
 								
 					case 'app':
-						$notification->sendFirebaseNotification($firebase_server_key,$value['token'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""));
+						$notification->sendFirebaseNotification($firebase_server_key,$value['token'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['sound'] ?? "default");
 						break;
 				}
 			}
