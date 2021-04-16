@@ -3,7 +3,7 @@
     Copyright (C) 2021  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.2, 05/01/21
+		@version 1.2.1, 16/04/21
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -160,15 +160,15 @@ foreach($JsonArr as $key => $value){
 			foreach($JsonArr['notification_v2']['services'] as $key => $value){
 				switch ($value['service']) {
 					case 'telegram':
-						$notification->sendTelegram($value['token'],$value['chat_id'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""));	
+						$notification->sendTelegram($value['token'],$value['chat_id'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel']++ ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""));	
 						break;
 			
 					case 'pushover':
-						$notification->sendPushover($value['token'],$value['user_key'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['priority'] ?? "0",$value['retry'] ?? "30",$value['expire'] ?? "300");
+						$notification->sendPushover($value['token'],$value['user_key'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel']++ ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['priority'] ?? "0",$value['retry'] ?? "30",$value['expire'] ?? "300");
 						break;
 								
 					case 'app':
-						$notification->sendFirebaseNotification($firebase_server_key,$value['token'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['sound'] ?? "default");
+						$notification->sendFirebaseNotification($firebase_server_key,$value['token'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel']++ ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['sound'] ?? "default");
 						break;
 				}
 			}

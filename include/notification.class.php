@@ -67,6 +67,7 @@
 				"sound" => $sound,
 				"body"  => $message,
 				"title" => "WLANThermo",
+				"link" 	=> "href://www.wlanthermo.de",
 				"content_available" => true,
 				"priority" => "high"
 				],
