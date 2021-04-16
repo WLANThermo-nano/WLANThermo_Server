@@ -1,9 +1,9 @@
 <?php
  /*************************************************** 
-    Copyright (C) 2020  Florian Riedl
+    Copyright (C) 2021  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.1, 23/09/20
+		@version 1.2.1, 16/04/21
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ $time_start = microtime(true);
 
 // include logging libary 
 require_once("../include/SimpleLogger.php"); // logger class
-SimpleLogger::$debug = true;
+SimpleLogger::$debug = false;
 
 // include database and logfile config
 if(stristr($_SERVER['SERVER_NAME'], 'dev-')){
@@ -48,6 +48,9 @@ require_once("../include/device.class.php");
 
 // include cloud libary
 require_once("../include/cloud.class.php");
+
+// include notification libary
+require_once("../include/notification.class.php");
 
 // log IP-Adress
 SimpleLogger::info("IP-Adress:".$_SERVER['REMOTE_ADDR']."\n");
@@ -105,16 +108,16 @@ foreach($JsonArr as $key => $value){
 		case 'cloud':	// process cloud
 			$cloud = new Cloud();				
 			switch ($JsonArr['cloud']['task']) {
+				
 				case 'save':	// process cloud save						
 					$JsonArr['cloud']['task'] = $cloud->insertCloudData($JsonArr['device']['serial'],$JsonArr['cloud']['api_token'],$JsonArr['cloud']['data']) ? 'true' : 'false';
 					unset($JsonArr['cloud']['data']);
 					break;
-				case 'read':	// process cloud read
-					
+				
+				case 'read':	// process cloud read	
 					$from = isset($JsonArr['cloud']['from']) ? $JsonArr['cloud']['from'] : null;
 					$to = isset($JsonArr['cloud']['to']) ? $JsonArr['cloud']['to'] : null;
 					$data = $cloud->readCloudData($JsonArr['cloud']['api_token'], $from, $to);
-					
 					if($data){
 						$JsonArr['cloud']['task'] = true;
 						$JsonArr['cloud']['data'] = $data;
@@ -122,6 +125,7 @@ foreach($JsonArr as $key => $value){
 						$JsonArr['cloud']['task'] = false;
 					}
 					break;	
+				
 				default:
 				   $JsonArr['cloud']['task'] = 'false';						
 			}			
@@ -132,9 +136,44 @@ foreach($JsonArr as $key => $value){
 			break;
 		
 		case 'notification':	// process notification
-			$JsonArr = createNotificationJson($JsonArr);
+			$notification = new Notification();
+			switch ($JsonArr['notification']['task']){
+				case 'alert':			
+					foreach($JsonArr['notification']['services'] as $key => $value){
+						switch ($value['service']) {
+							case 'telegram':
+								$notification->sendTelegram($value['key1'],$value['key2'],$notification->getMessage($JsonArr['notification']['message'],$JsonArr['notification']['lang'] ?? "en",$JsonArr['notification']['channel'] ?? "",$JsonArr['notification']['temp'][0] ?? "",$JsonArr['notification']['temp'][1] ?? ""),$JsonArr['notification']['sound'] ?? "");	
+								break;
+					
+							case 'pushover':
+								$notification->sendPushover($value['key1'],$value['key2'],$notification->getMessage($JsonArr['notification']['message'],$JsonArr['notification']['lang'] ?? "en",$JsonArr['notification']['channel'] ?? "",$JsonArr['notification']['temp'][0] ?? "",$JsonArr['notification']['temp'][1] ?? ""));
+								break;
+						}
+					}
+					break;
+			}
 			break;
-		
+
+		case 'notification_v2':	// process notification
+			$notification = new Notification();
+
+			foreach($JsonArr['notification_v2']['services'] as $key => $value){
+				switch ($value['service']) {
+					case 'telegram':
+						$notification->sendTelegram($value['token'],$value['chat_id'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel']++ ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""));	
+						break;
+			
+					case 'pushover':
+						$notification->sendPushover($value['token'],$value['user_key'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel']++ ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['priority'] ?? "0",$value['retry'] ?? "30",$value['expire'] ?? "300");
+						break;
+								
+					case 'app':
+						$notification->sendFirebaseNotification($firebase_server_key,$value['token'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel']++ ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['sound'] ?? "default");
+						break;
+				}
+			}
+			break;
+			
 		case 'alexa':	// process alexa
 			// $JsonArr = createAlexaJson($dbh,$JsonArr);
 			break;
@@ -447,129 +486,6 @@ function insertAlexaKey($dbh,$JsonArr){
 		SimpleLogger::log(SimpleLogger::DEBUG, $e->getMessage() . "\n");
 		return false;
 	}
-}
-//-----------------------------------------------------------------------------
-
-function createNotificationJson($JsonArr){
-	switch ($JsonArr['notification']['task']) {
-		
-		case 'alert':
-			sendNotification($JsonArr);
-			break;
-	}
-	return $JsonArr;
-}
-
-function sendNotification($JsonArr){
-	foreach($JsonArr['notification']['services'] as $key => $value){
-		switch ($value['service']) {
-			
-			case 'telegram':	
-				sendTelegram($JsonArr,$value);
-				break;
-			
-			case 'telegram-bot':
-				sendTelegramBot($JsonArr,$value);
-				break;
-			
-			case 'pushover':
-				sendPushover($JsonArr,$value);
-				break;
-			
-			case 'mail':
-				// ToDo
-				break;
-		}
-	}
-}
-
-function getMsg($JsonArr){
-
-	$de_alert_up = 'ACHTUNG! Kanal %s: Temperatur (%s°%s) ist zu hoch (%s°%s)';
-	$de_alert_down = 'ACHTUNG! Kanal %s: Temperatur (%s°%s) ist zu tief (%s°%s)';
-	$en_alert_up = 'ATTENTION! Channel %s: Temperature (%s°%s) is too high (%s°%s)';
-	$en_alert_down = 'ATTENTION!  Channel %s: Temperature (%s°%s) is too low (%s°%s)';
-	
-	$de_alert_battery = 'Achtung: Die Batterieladung ist niedrig! Bitte ein Netzteil anschließen.';
-	$en_alert_battery = 'Attention: Battery charge is low! Please connect a power adapter.';
-	$de_alert_test = 'Testnachricht erfolgreich gesendet. Deine Einstellungen sind korrekt.';
-	$en_alert_test = 'Message sent successfully. Your settings are correct.';
-	
-	switch ($JsonArr['notification']['lang']) {
-		
-		case 'de':
-			if($JsonArr['notification']['message'] == 'up'){
-				return sprintf($de_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
-			}else if($JsonArr['notification']['message'] === 'down'){
-				return sprintf($de_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
-			}else if($JsonArr['notification']['message'] === 'battery'){
-				return $de_alert_battery;	
-			}else if($JsonArr['notification']['message'] === 'test'){
-				return $de_alert_test;
-			}
-			break;
-		
-		case 'en':
-			if($JsonArr['notification']['message'] == 'up'){
-				return sprintf($en_alert_up , $JsonArr['notification']['channel'] , $JsonArr['notification']['temp'][0] , $JsonArr['notification']['unit'] , $JsonArr['notification']['temp'][1] , $JsonArr['notification']['unit']);
-			}else if($JsonArr['notification']['message'] === 'down'){
-				return sprintf($en_alert_down , $JsonArr['notification']['channel'] , $JsonArr['notification']['temp'][0] , $JsonArr['notification']['unit'] , $JsonArr['notification']['temp'][1] , $JsonArr['notification']['unit']);
-			}else if($JsonArr['notification']['message'] === 'battery'){
-				return $en_alert_battery;	
-			}else if($JsonArr['notification']['message'] === 'test'){
-				return $en_alert_test;
-			}
-		
-		default:
-			if($JsonArr['notification']['message'] == 'up'){
-				return sprintf($en_alert_up, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
-			}else if($JsonArr['notification']['message'] === 'down'){
-				return sprintf($en_alert_down, $JsonArr['notification']['channel'],$JsonArr['notification']['temp'][0],$JsonArr['notification']['unit'],$JsonArr['notification']['temp'][1],$JsonArr['notification']['unit']);
-			}else if($JsonArr['notification']['message'] === 'battery'){
-				return $en_alert_battery;	
-			}else if($JsonArr['notification']['message'] === 'test'){
-				return $en_alert_test;
-			}
-	}
-}
-
-function sendTelegram($JsonArr,$services){	
-	$url = 'https://api.telegram.org/bot' . $services['key1'] . '/sendMessage?text="' . getMsg($JsonArr) . '"&chat_id=' . $services['key2'];
-	$result = json_decode(file_get_contents($url));
-	if($result->ok === true){
-		SimpleLogger::info("Message has been sent! \n");
-	}else{
-		SimpleLogger::error("Message could not be sent! \n");		
-	}
-}
-
-function sendTelegramBot($JsonArr,$services){	
-	global $telegram_bot_api;
-	$url = 'https://api.telegram.org/bot' . $telegram_bot_api . '/sendMessage?text="' . getMsg($JsonArr) . '"&chat_id=' . $services['key2'];
-	$result = json_decode(file_get_contents($url));
-	if($result->ok === true){
-		SimpleLogger::info("Message has been sent! \n");
-	}else{
-		SimpleLogger::error("Message could not be sent! \n");		
-	}
-}
-
-function sendPushover($JsonArr,$services){
-	curl_setopt_array($ch = curl_init(), array(
-	  CURLOPT_URL => "https://api.pushover.net/1/messages.json",
-	  CURLOPT_POSTFIELDS => array(
-		"token" => $services['key1'],
-		"user" => $services['key2'],
-		"message" => getMsg($JsonArr),
-		//"priority" => "2",
-		//"retry" => "30",
-		//"expire" => "300",
-	  ),
-	  CURLOPT_SAFE_UPLOAD => true,
-	  CURLOPT_RETURNTRANSFER => true,
-	));
-	curl_exec($ch);
-	curl_close($ch);
 }
 //-----------------------------------------------------------------------------
 

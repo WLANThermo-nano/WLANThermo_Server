@@ -1,9 +1,9 @@
 <?php
  /*************************************************** 
-    Copyright (C) 2018  Florian Riedl
+    Copyright (C) 2021  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 0.2, 30/04/18
+		@version 1.0, 17/01/2021
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,82 +27,54 @@
 // start runtome counter
  $time_start = microtime(true);
 //-----------------------------------------------------------------------------
-// include Logging libary 
-$logfile = '_message.log'; // global var for logger class filename
-$logpath = '../logs/';  // global var for logger class filepath
-require_once("../include/logger.php"); // logger class
-//-----------------------------------------------------------------------------
+// include logging libary 
+require_once("../include/SimpleLogger.php"); // logger class
+SimpleLogger::$debug = true;
 
-// message.php?serial=54gfdgf&token=344407734:AAGEdm9gxoFDfuXKUL6HynxDopYrdIYkMPc&chatID=399660681&ch=0&msg=up&lang=de&service=telegram
-// message.php?serial=54gfdgf&token=am7hrgkizhxbz89411y17kzo5w59ii&chatID=uxg4kym3shnhwjnz3ft5min2cw4osp&ch=0&msg=up&lang=de&service=pushover
+// include database and logfile config
+if(stristr($_SERVER['SERVER_NAME'], 'dev-')){
+	require_once("../dev-config.inc.php"); // REMOVE
+	SimpleLogger::$filePath = '../logs/dev-message.wlanthermo.de/message_'.strftime("%Y-%m-%d").'.log';
+}else{
+	require_once("../config.inc.php"); // REMOVE
+	SimpleLogger::$filePath = '../logs/message.wlanthermo.de/message_'.strftime("%Y-%m-%d").'.log';
+}
+//-----------------------------------------------------------------------------
+// include notification libary
+require_once("../include/notification.class.php");
+
+//whether ip is from share internet
+
+if (!empty($_SERVER['HTTP_CLIENT_IP'])){
+    $ip_address = $_SERVER['HTTP_CLIENT_IP'];
+}elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){ //whether ip is from proxy
+    $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
+}else{ //whether ip is from remote address
+	$ip_address = $_SERVER['REMOTE_ADDR'];
+}
 
 if (isset($_GET['serial']) AND !empty($_GET['serial']) AND isset($_GET['token']) AND !empty($_GET['token']) AND isset($_GET['chatID']) AND !empty($_GET['chatID']) AND isset($_GET['ch']) AND isset($_GET['msg']) AND !empty($_GET['msg']) AND isset($_GET['lang']) AND !empty($_GET['lang']) AND isset($_GET['service']) AND !empty($_GET['service'])){
+	$notification = new Notification();
 	switch ($_GET['service']) {
-    case telegram:
-		sendTelegram($_GET['token'],$_GET['chatID'],getMsg($_GET['ch'],$_GET['msg'],$_GET['lang']));
-        break;
-    case pushover:
-		sendPushover($_GET['token'],$_GET['chatID'],getMsg($_GET['ch'],$_GET['msg'],$_GET['lang']));
-        break;
+		case telegram:
+			$status = $notification->sendTelegram($_GET['token'],$_GET['chatID'],$notification->getMessage($_GET['msg'],$_GET['lang'] ?? "en",$_GET['ch'] ?? ""));
+			$notification->sendTelegram($_GET['token'],$_GET['chatID'],"Lieber WLANThermo User, die Software auf deinem Thermometer ist leider veraltet, wodurch einige Schnittstellen, wie die Benachrichtigung, in Zukunft nicht mehr funktionieren werden. Führe bitte ein Update der Firmware durch oder kontaktiere uns über das WLANThermo Forum. Vielen Dank!");
+			break;
+		case pushover:
+			$status = $notification->sendPushover($_GET['token'],$_GET['chatID'],$notification->getMessage($_GET['msg'],$_GET['lang'] ?? "en",$_GET['ch'] ?? ""));	
+			$notification->sendPushover($_GET['token'],$_GET['chatID'],"Lieber WLANThermo User, die Software auf deinem Thermometer ist leider veraltet, wodurch einige Schnittstellen, wie die Benachrichtigung, in Zukunft nicht mehr funktionieren werden. Führe bitte ein Update der Firmware durch oder kontaktiere uns über das WLANThermo Forum. Vielen Dank!");
+			break;
+	}
+	if($status){
+		SimpleLogger::debug("Message send\n");
+		SimpleLogger::debug("Serial:".$_GET['serial']." Token:".$_GET['token']." ChatID:".$_GET['chatID']." IP Adress:".$ip_address."\n");
+	}else{
+		SimpleLogger::debug("Message not send\n");
+		SimpleLogger::debug("Serial:".$_GET['serial']." Token:".$_GET['token']." ChatID:".$_GET['chatID']." IP Adress:".$ip_address."\n");
 	}
 }else{
-	die('false');
+    http_response_code(400); // Bad request
+	SimpleLogger::error("parameter invalide\n");
+	SimpleLogger::dump($_GET . "\n");
+	exit;
 }
-
-function getMsg($ch,$msg,$lang){
-$de = array("msg0" => "ACHTUNG!","msg1" => "Kanal","msg2" => "hat","up" => "Übertemperatur","down" => "Untertemperatur");
-$en = array("msg0" => "ATTENTION!","msg1" => "Channel","msg2" => "has","up" => "overtemperature","down" => "undertemperature");
-	
-	switch ($lang) {
-    case de:
-		$message = ''.$de["msg0"].' '.$de["msg1"].''.$ch.' '.$de["msg2"].' '.$de["".$msg.""].'.';
-        return $message;
-        break;
-    case en:
-		$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
-        return $message;
-        break;
-    default:
-		$message = ''.$en["msg0"].' '.$en["msg1"].''.$ch.' '.$en["msg2"].' '.$en["".$msg.""].'.';
-		return $message;
-	}
-}
-
-function sendTelegram($token,$chatID,$msg){
-	$url = 'https://api.telegram.org/bot' . $token . '/sendMessage?text="'.$msg.'"&chat_id='.$chatID.'';
-	$result = json_decode(file_get_contents($url));
-	//var_dump($result);
-	if($result->ok === true){
-		SimpleLogger::info("Message has been sent! (pushover) - device(".$_GET['serial'].") \n");
-	}else{
-		SimpleLogger::error("Message could not be sent! (pushover) - device(".$_GET['serial'].") \n");
-		SimpleLogger::debug(json_encode($result) . "\n");		
-	}
-}
-
-function sendPushover($token,$chatID,$msg){
-	curl_setopt_array($ch = curl_init(), array(
-	  CURLOPT_URL => "https://api.pushover.net/1/messages.json",
-	  CURLOPT_POSTFIELDS => array(
-		"token" => $token,
-		"user" => $chatID,
-		"message" => $msg,
-	  ),
-	  CURLOPT_SAFE_UPLOAD => true,
-	  CURLOPT_RETURNTRANSFER => true,
-	));
-	$result = curl_exec($ch);
-	$json_result = json_decode( $result, true );
-	if($json_result['status'] == 1){
-		SimpleLogger::info("Message has been sent! (pushover) - device(".$_GET['serial'].") \n");
-	}else{
-		SimpleLogger::error("Message could not be sent! (pushover) - device(".$_GET['serial'].") \n");
-		SimpleLogger::debug($result . "\n");
-	}
-	//{"status":1,"request":"2f095aee-9c80-4c7b-987b-688399bde2d7"}
-	//{"token":"invalid","errors":["application token is invalid"],"status":0,"request":"b735dbd0-49ca-4dde-9705-8be42f8e973c"}
-	//{"user":"invalid","errors":["user identifier is not a valid user, group, or subscribed user key"],"status":0,"request":"6956bca9-0637-447e-a9ab-d53f18f8c4f0"}
-	echo $test;
-	curl_close($ch);
-}
-?>
