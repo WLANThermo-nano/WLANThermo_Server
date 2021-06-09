@@ -3,7 +3,7 @@
     Copyright (C) 2021  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.2.2, 12/05/21
+		@version 1.2.3, 09/06/21
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,6 +51,9 @@ require_once("../include/cloud.class.php");
 
 // include notification libary
 require_once("../include/notification.class.php");
+
+// include crashlog libary
+require_once("../include/crashlog.class.php");
 
 // log IP-Adress
 SimpleLogger::info("IP-Adress:".$_SERVER['REMOTE_ADDR']."\n");
@@ -148,15 +151,15 @@ foreach($JsonArr as $key => $value){
 			foreach($JsonArr['notification_v2']['services'] as $key => $value){
 				switch ($value['service']) {
 					case 'telegram':
-						$notification->sendTelegram($value['token'],$value['chat_id'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] + 1 ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""));	
+						$notification->sendTelegram($value['token'],$value['chat_id'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",isset($JsonArr['notification_v2']['message']['channel']) ? $JsonArr['notification_v2']['message']['channel'] + 1 : "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""));	
 						break;
 			
 					case 'pushover':
-						$notification->sendPushover($value['token'],$value['user_key'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] + 1 ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['priority'] ?? "0",$value['retry'] ?? "30",$value['expire'] ?? "300");
+						$notification->sendPushover($value['token'],$value['user_key'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",isset($JsonArr['notification_v2']['message']['channel']) ? $JsonArr['notification_v2']['message']['channel'] + 1 : "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['priority'] ?? "0",$value['retry'] ?? "30",$value['expire'] ?? "300");
 						break;
 								
 					case 'app':
-						$notification->sendFirebaseNotification($firebase_server_key,$value['token'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",$JsonArr['notification_v2']['message']['channel'] + 1 ?? "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['sound'] ?? "default");
+						$notification->sendFirebaseNotification($firebase_server_key,$value['token'],$notification->getMessage($JsonArr['notification_v2']['message']['type'],$JsonArr['device']['language'] ?? "en",isset($JsonArr['notification_v2']['message']['channel']) ? $JsonArr['notification_v2']['message']['channel'] + 1 : "",$JsonArr['notification_v2']['message']['temp'] ?? "",$JsonArr['notification_v2']['message']['limit'] ?? ""),$value['sound'] ?? "default");
 						break;
 				}
 			}
@@ -164,6 +167,11 @@ foreach($JsonArr as $key => $value){
 			
 		case 'alexa':	// process alexa
 			// $JsonArr = createAlexaJson($dbh,$JsonArr);
+			break;
+			
+		case 'crash_report':
+			$crashreport = new Crashreport;
+			$crashreport->saveReport($JsonArr['device']['serial'],$JsonArr['crash_report']['reset_reason'],$JsonArr['crash_report']['report'] ?? "");
 			break;
 	}
 }
