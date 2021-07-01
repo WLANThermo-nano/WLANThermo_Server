@@ -109,7 +109,7 @@ class SimpleLogger
       case self::EMERGENCY:$levelStr = "EMERG"; break;
     }
     
-    $fd = fopen ( self::$filePath, $mode );
+    /*$fd = fopen ( self::$filePath, $mode );
     if ($fd)
     {
       $arguments = func_get_args ();
@@ -124,7 +124,8 @@ class SimpleLogger
       fprintf ( $fd, "%s\t[%s]: %s", $time, $levelStr, $message );
       fflush ( $fd );
       fclose ( $fd );
-    }
+    }*/
+
   }
   
   /**

@@ -1,10 +1,10 @@
 <?php
 /* INCLUDE: Verbindung zur Text-Datenbank herstellen */
  
-$db_server = "localhost"; // Hostname
-$db_user = "<YOUR_DB_USER>"; // Benutzername
-$db_pass = "<YOUR_DB_PASSWORD>"; // Kennwort
-$db_name = "<YOUR_DB_NAME>"; // Name der Datenbank
+$db_server = getenv("DB_SERVER"); // Hostname
+$db_user = getenv("DB_USER"); // Benutzername
+$db_pass = getenv("DB_PASS"); // Kennwort
+$db_name = getenv("DB_NAME"); // Name der Datenbank
 
 
 /* TOKEN für Telegram BOT */
