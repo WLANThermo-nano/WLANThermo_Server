@@ -1,9 +1,9 @@
 <?php
  /*************************************************** 
-    Copyright (C) 2020  Florian Riedl
+    Copyright (C) 2021  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.1, 05/09/20
+		@version 1.2, 09/06/21
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -106,43 +106,45 @@ switch ($JsonArr['action']) {
 	case 'published':
 		//SimpleLogger::debug("case published\n");
 		foreach ($JsonArr['release']['assets'] as $key => $inhalt){
-			$arr = explode('_',pathinfo($inhalt['name'])['filename']);
-			$file = false;
+			if(strtolower(pathinfo($inhalt['name'])['basename']) != ".elf"){			
+				$arr = explode('_',pathinfo($inhalt['name'])['filename']);
+				$file = false;
 
-			try {
-				$file = file_get_contents(strval($inhalt['browser_download_url']), true);
-			} catch (Exception $e) {
-				$err_flag = true;
-			}
-			//SimpleLogger::debug("foreach\n");
-			if(count($arr) == 5 AND $file !== false){
-				//SimpleLogger::debug("validation true\n");
-				$db = new DB();
-				$sql = "INSERT INTO software_files (device, hardware_version, cpu, software_version, release_id, asset_id, prerelease, file_type, file_url, file_name,file_sha256, file) 
-						VALUES (:device, :hardware_version, :cpu, :software_version, :release_id, :asset_id, :prerelease, :file_type, :file_url, :file_name,:file_sha256, :file)";
-				$statement = $db->connect()->prepare($sql);
-				$statement->bindValue(':device', $arr[0]);
-				$statement->bindValue(':hardware_version', $arr[1]);
-				$statement->bindValue(':cpu', $arr[2]);
-				$statement->bindValue(':software_version', $arr[4]);
-				$statement->bindValue(':release_id', $JsonArr["release"]["id"]);
-				$statement->bindValue(':asset_id', $inhalt['id']);
-				$statement->bindValue(':prerelease', $JsonArr["release"]["prerelease"]);
-				$statement->bindValue(':file_type', $arr[3]);
-				$statement->bindValue(':file_url', $inhalt['browser_download_url']);
-				$statement->bindValue(':file_name', $inhalt['name']);
-				$statement->bindValue(':file_sha256', hash('sha256',$file));
-				$statement->bindValue(':file', $file, PDO::PARAM_LOB);
-				$inserted = $statement->execute();
-				if($inserted){
-					echo "File '".$inhalt['name']."' was imported into the database";
-				}else{
-					echo "false";
+				try {
+					$file = file_get_contents(strval($inhalt['browser_download_url']), true);
+				} catch (Exception $e) {
 					$err_flag = true;
-				}				
-			}else{
-				echo "Filename '".$inhalt['name']."' or file not valid";
-				$err_flag = true; 
+				}
+				//SimpleLogger::debug("foreach\n");
+				if(count($arr) == 5 AND $file !== false){
+					//SimpleLogger::debug("validation true\n");
+					$db = new DB();
+					$sql = "INSERT INTO software_files (device, hardware_version, cpu, software_version, release_id, asset_id, prerelease, file_type, file_url, file_name,file_sha256, file) 
+							VALUES (:device, :hardware_version, :cpu, :software_version, :release_id, :asset_id, :prerelease, :file_type, :file_url, :file_name,:file_sha256, :file)";
+					$statement = $db->connect()->prepare($sql);
+					$statement->bindValue(':device', $arr[0]);
+					$statement->bindValue(':hardware_version', $arr[1]);
+					$statement->bindValue(':cpu', $arr[2]);
+					$statement->bindValue(':software_version', $arr[4]);
+					$statement->bindValue(':release_id', $JsonArr["release"]["id"]);
+					$statement->bindValue(':asset_id', $inhalt['id']);
+					$statement->bindValue(':prerelease', $JsonArr["release"]["prerelease"]);
+					$statement->bindValue(':file_type', $arr[3]);
+					$statement->bindValue(':file_url', $inhalt['browser_download_url']);
+					$statement->bindValue(':file_name', $inhalt['name']);
+					$statement->bindValue(':file_sha256', hash('sha256',$file));
+					$statement->bindValue(':file', $file, PDO::PARAM_LOB);
+					$inserted = $statement->execute();
+					if($inserted){
+						echo "File '".$inhalt['name']."' was imported into the database";
+					}else{
+						echo "false";
+						$err_flag = true;
+					}				
+				}else{
+					echo "Filename '".$inhalt['name']."' or file not valid";
+					$err_flag = true; 
+				}
 			}
 		}
 		SimpleLogger::debug("action published found\n");

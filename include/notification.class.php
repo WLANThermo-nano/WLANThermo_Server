@@ -3,7 +3,7 @@
     Copyright (C) 2021  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 05/01/21
+		@version 1.1, 28/05/21
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,14 +21,31 @@
  ****************************************************/
  
  class Notification{
-	public function sendTelegram($token,$chat_id,$message){
-		$url = 'https://api.telegram.org/bot' . $token . '/sendMessage?text="' . $message . '"&chat_id=' . $chat_id;
-		$result = json_decode(file_get_contents($url));
-		if($result->ok === true){
-			return true;
+	
+	 public function sendTelegram($token,$chat_id,$message){
+		$ch = curl_init('https://api.telegram.org/bot'.$token.'/sendMessage');
+		curl_setopt_array($ch, array(
+			CURLOPT_HEADER => 0,
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_POST => 1,
+			CURLOPT_POSTFIELDS => array(
+				'chat_id' => $chat_id,
+				'text' => $message
+			)
+		));
+		$result = curl_exec($ch);
+		if(curl_getinfo($ch, CURLINFO_HTTP_CODE) == 200){
+			if(json_decode($result)->ok === true){
+				return true;
+				
+			}else{
+				return false;		
+			}
 		}else{
-			return false;		
-		}		
+			return false;
+		}
+		
+		curl_close($ch);
 	}
 	
 	public function sendPushover($token,$user_key,$message,$priority="0",$retry="30",$expire="300"){

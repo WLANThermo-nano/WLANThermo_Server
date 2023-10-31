@@ -1,10 +1,10 @@
 <?php
 error_reporting(E_ALL);
  /*************************************************** 
-    Copyright (C) 2020  Florian Riedl
+    Copyright (C) 2021  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.0, 03/07/20
+		@version 1.1, 28/05/21
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -155,12 +155,14 @@ function getHistory($dbh,$api_token,$api_time){
 				}else{
 					$arr = array(); 
 					$arr['system']['time'] = $obj['system']['time'];
-					$arr['system']['soc'] = $obj['system']['soc'];
+					if(isset($obj['system']['soc'])){
+						$arr['system']['soc'] = $obj['system']['soc'];
+					}
 					foreach ( $obj['channel'] as $key => $value )
 					{
 						$arr['channel'][$key]['temp'] = $value['temp'];
 					}
-					if(isset($obj['pitmaster'])){					
+					if(isset($obj['pitmaster']) AND !empty($obj['pitmaster'])){					
 						if(isAssoc($obj['pitmaster'])){
 							foreach ($obj['pitmaster'] as $key => $value)
 							{
@@ -169,9 +171,9 @@ function getHistory($dbh,$api_token,$api_time){
 								$arr['pitmaster'][$key]['typ'] = $value['typ'];
 							}					
 						}else{
-							$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
-							$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
-							$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];						
+								$arr['pitmaster'][0]['value'] = $obj['pitmaster']['value'];
+								$arr['pitmaster'][0]['set'] = $obj['pitmaster']['set'];
+								$arr['pitmaster'][0]['typ'] = $obj['pitmaster']['typ'];				
 						}
 					}
 					array_push($data, $arr);
@@ -208,7 +210,9 @@ function getCSV($dbh,$api_token,$api_time){
 				}else{
 					$arr = array(); 
 					$arr['system']['time'] = $obj['system']['time'];
-					$arr['system']['soc'] = $obj['system']['soc'];
+					if(isset($obj['system']['soc'])){
+						$arr['system']['soc'] = $obj['system']['soc'];
+					}
 					foreach ( $obj['channel'] as $key => $value )
 					{
 						$arr['channel'][$key]['temp'] = $value['temp'];

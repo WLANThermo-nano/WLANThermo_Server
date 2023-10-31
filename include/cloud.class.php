@@ -3,7 +3,7 @@
     Copyright (C) 2020  Florian Riedl
     ***************************
 		@author Florian Riedl
-		@version 1.1, 23/09/20
+		@version 1.3, 28/05/21
 	***************************
 	This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -21,9 +21,7 @@
  ****************************************************/
  
 class Cloud extends DB{
-	private $token;
-	private $serial;
-	
+
 	public function insertCloudData($serial,$api_token,$data){
 		if(!$this->checkCloudJson($serial,$api_token,$data)){
 			return false;
@@ -84,12 +82,14 @@ class Cloud extends DB{
 					$obj = json_decode( $daten['data'], true );
 					if ($obj === null && json_last_error() !== JSON_ERROR_NONE) {
 						return false;
-						//ToDo Error Hadling
+						//ToDo Error Handling
 					}else{
 						$arr = array(); 
 						$n = 0;
 						$arr['system']['time'] = $obj['system']['time'];
-						$arr['system']['soc'] = $obj['system']['soc'];
+						if(isset($obj['system']['soc'])){
+							$arr['system']['soc'] = $obj['system']['soc'];
+						}
 						foreach ( $obj['channel'] as $key => $value )
 						{
 							if($value['temp'] != 999){
@@ -98,7 +98,7 @@ class Cloud extends DB{
 								$n++;
 							}
 						}
-						if(isset($obj['pitmaster'])){					
+						if(isset($obj['pitmaster']) AND !empty($obj['pitmaster'])){	
 							foreach ($obj['pitmaster'] as $key => $value)
 							{
 								$arr['pitmaster'][$key]['value'] = $value['value'];
@@ -117,6 +117,45 @@ class Cloud extends DB{
 		} catch (PDOException $e) {
 			return false;
 		}	
+	}
+	
+	public function readHistoryList($serial){	
+		try {
+			$tmp = array();
+			$sql = "SELECT api_token, ts_start, ts_stop FROM `history` WHERE serial= :serial order by `id` desc";
+			$statement = $this->connect()->prepare($sql);
+			$statement->bindValue(':serial', $serial);
+			$statement->execute();
+			$statement->setFetchMode(PDO::FETCH_ASSOC);
+			if ($statement->rowCount() > 0) {
+				foreach($statement as $key => $daten) {
+					array_push($tmp, $daten);
+				}
+				return $tmp;
+			}else{
+				return false;	
+			}
+		} catch (PDOException $e) {
+			return false;
+		}
+	}
+
+	function deleteHistoryData($api_token){	
+		try {
+			$tmp = array();
+			$sql = "DELETE FROM `history` WHERE api_token= :api_token";
+			$statement = $this->connect()->prepare($sql);
+			$statement->bindValue(':api_token', $api_token);
+			$statement->execute();
+			$statement->setFetchMode(PDO::FETCH_ASSOC);
+			if ($statement->rowCount() > 0) {
+				return true;
+			}else{
+				return false;	
+			}
+		} catch (PDOException $e) {
+			return false;
+		}
 	}
 	
 	private function isAssoc($arr){
