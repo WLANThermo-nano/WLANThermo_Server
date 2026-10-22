@@ -43,7 +43,7 @@ if (isset($_GET['asset_id']) AND !empty($_GET['asset_id'])){
 	}
 	if($file){
 		header("Digest: sha-256=".base64_encode(hex2bin(hash('sha256',$file))));
-		if(stripos($_SERVER[HTTP_ACCEPT_ENCODING], "deflate") !== false){
+		if(stripos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', "deflate") !== false){
 			$file = gzcompress($file, 6);
 			header("Content-Encoding: deflate");		
 		}

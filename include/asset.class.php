@@ -44,6 +44,9 @@ class asset extends DB{
 			$statement->execute();
 			$statement->bindColumn(1,$firmware, PDO::PARAM_LOB);
 			$statement->fetch(PDO::FETCH_BOUND);
+			if (is_resource($firmware)) {
+				$firmware = stream_get_contents($firmware);
+			}
 			if(!empty($firmware)){
 				return $firmware;
 			}else{
